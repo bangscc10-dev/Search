@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "com.search.browser.app-debug-33:/layout_activity_main.xml.flat",
+        "source": "com.search.browser.app-main-35:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.search.browser.app-debug-33:/layout_item_tab.xml.flat",
+        "source": "com.search.browser.app-main-35:/layout/item_tab.xml"
+    },
+    {
+        "merged": "com.search.browser.app-debug-33:/drawable_urlbar_bg.xml.flat",
+        "source": "com.search.browser.app-main-35:/drawable/urlbar_bg.xml"
+    }
+]

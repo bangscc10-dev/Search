@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="appBackground">#FAFAFA</color>
+    <string name="app_name">Search</string>
+    <style name="Theme.Search" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="android:windowBackground">@color/appBackground</item>
+        <item name="android:colorBackground">@color/appBackground</item>
+        <item name="android:statusBarColor">@color/appBackground</item>
+        <item name="android:navigationBarColor">@color/appBackground</item>
+        
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

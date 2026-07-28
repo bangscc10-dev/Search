@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_margin="6dp"
+    android:background="#F2F2F2"
+    android:padding="6dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Thumbnail preview -->
+    <ImageView
+        android:id="@+id/tabThumb"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:scaleType="matrix"
+        android:background="#FFFFFF"
+        android:contentDescription="Tab preview" />
+
+    <!-- Title + close row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="6dp">
+
+        <TextView
+            android:id="@+id/tabTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="#111111"
+            android:text="New Tab" />
+
+        <ImageButton
+            android:id="@+id/closeTab"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:contentDescription="Close tab" />
+    </LinearLayout>
+</LinearLayout>
