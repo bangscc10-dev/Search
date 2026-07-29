@@ -8,8 +8,8 @@
 
     <!-- Owl brand icon -->
     <ImageView
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
         android:layout_gravity="center_horizontal"
         android:src="@drawable/ic_owl"
         android:layout_marginBottom="10dp"
