@@ -139,25 +139,7 @@
                 android:textSize="15sp"
                 android:background="@drawable/urlbar_bg" />
 
-            <TextView
-                android:id="@+id/deckBookmarks"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Saved"
-                android:textStyle="bold"
-                android:textColor="#2B6CF0"
-                android:padding="12dp"
-                android:background="?attr/selectableItemBackgroundBorderless" />
 
-            <TextView
-                android:id="@+id/deckHistory"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="History"
-                android:textStyle="bold"
-                android:textColor="#2B6CF0"
-                android:padding="12dp"
-                android:background="?attr/selectableItemBackgroundBorderless" />
 
             <TextView
                 android:id="@+id/deckNewTab"

@@ -95,6 +95,8 @@ class MainActivity : AppCompatActivity() {
                     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
                 useWideViewPort = true
                 loadWithOverviewMode = true
+                builtInZoomControls = true
+                displayZoomControls = false
             }
 
             // --- Security toggles ---
@@ -141,6 +143,18 @@ class MainActivity : AppCompatActivity() {
                 // Cosmetic ad-hiding: hide common ad containers when blocking is on.
                 if (AdBlocker.isEnabled(this@MainActivity)) {
                     view?.evaluateJavascript(AdBlocker.hideCss(), null)
+                }
+                // Desktop mode: force a desktop-width viewport so responsive
+                // sites render their desktop layout.
+                if (Settings.getBool(this@MainActivity, Settings.DESKTOP_MODE, false)) {
+                    val js = "(function(){var v=document.querySelector('meta[name=viewport]');" +
+                        "if(!v){v=document.createElement('meta');v.name='viewport';" +
+                        "document.head.appendChild(v);}" +
+                        "v.setAttribute('content','width=980');})();"
+                    view?.evaluateJavascript(js, null)
+                    val sw = resources.displayMetrics.widthPixels
+                    val scale = (sw.toFloat() / 980f * 100f).toInt().coerceIn(20, 100)
+                    view?.setInitialScale(scale)
                 }
                 tabs.activeTab?.let { t ->
                     t.title = view?.title ?: t.title
@@ -256,6 +270,36 @@ class MainActivity : AppCompatActivity() {
         tab.webView = null
     }
 
+    private fun applyDesktopMode(on: Boolean) {
+        val web = tabs.activeTab?.webView ?: return
+        val desktopUA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 " +
+            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        web.settings.apply {
+            if (on) {
+                userAgentString = desktopUA
+                useWideViewPort = true
+                loadWithOverviewMode = true
+                // Force a desktop-width layout so responsive sites render desktop.
+                setSupportZoom(true)
+                builtInZoomControls = true
+                displayZoomControls = false
+            } else {
+                userAgentString = null
+                useWideViewPort = true
+                loadWithOverviewMode = true
+            }
+        }
+        // Scale the 980px desktop layout to fit the screen width (like Chrome).
+        if (on) {
+            val screenWidthDp = resources.displayMetrics.widthPixels
+            val scale = (screenWidthDp.toFloat() / 980f * 100f).toInt().coerceIn(20, 100)
+            web.setInitialScale(scale)
+        } else {
+            web.setInitialScale(0)
+        }
+        web.reload()
+    }
+
     private fun openMenu() {
         binding.menuScrim.visibility = View.VISIBLE
     }
@@ -283,13 +327,6 @@ class MainActivity : AppCompatActivity() {
         binding.deckClose.setOnClickListener { closeDeck() }
         binding.deckNewTab.setOnClickListener { closeDeck(); addNewTab(homePage) }
 
-        binding.deckHistory.setOnClickListener { toggleHistory() }
-        binding.deckBookmarks.setOnClickListener { toggleBookmarks() }
-        binding.deckHistory.setOnLongClickListener {
-            History.clear(this)
-            if (binding.historyList.visibility == View.VISIBLE) showHistory()
-            true
-        }
 
         binding.deckSearch.setOnEditorActionListener { _, actionId, event ->
             val enter = actionId == EditorInfo.IME_ACTION_GO ||
@@ -307,6 +344,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openDeck() {
+        // Always open on the tab view; reset any lingering history/bookmark view.
+        historyOpen = false
+        bookmarksOpen = false
+        binding.historyList.visibility = View.GONE
+        binding.bookmarkList.visibility = View.GONE
+        binding.tabList.visibility = View.VISIBLE
         val active = tabs.activeTab
         if (active?.webView != null && !deckVisible) captureThumbnail(active) { showDeckNow() }
         else showDeckNow()
@@ -367,8 +410,6 @@ class MainActivity : AppCompatActivity() {
         binding.historyList.visibility = View.VISIBLE
         binding.tabList.visibility = View.GONE
         binding.bookmarkList.visibility = View.GONE
-        binding.deckHistory.setText("Tabs")
-        binding.deckBookmarks.setText("Saved")
         historyOpen = true
         bookmarksOpen = false
     }
@@ -392,8 +433,6 @@ class MainActivity : AppCompatActivity() {
         binding.bookmarkList.visibility = View.VISIBLE
         binding.tabList.visibility = View.GONE
         binding.historyList.visibility = View.GONE
-        binding.deckBookmarks.setText("Tabs")
-        binding.deckHistory.setText("History")
         bookmarksOpen = true
         historyOpen = false
     }
@@ -401,14 +440,12 @@ class MainActivity : AppCompatActivity() {
     private fun hideBookmarks() {
         binding.bookmarkList.visibility = View.GONE
         binding.tabList.visibility = View.VISIBLE
-        binding.deckBookmarks.setText("Saved")
         bookmarksOpen = false
     }
 
     private fun hideHistory() {
         binding.historyList.visibility = View.GONE
         binding.tabList.visibility = View.VISIBLE
-        binding.deckHistory.setText("History")
         historyOpen = false
     }
 
@@ -551,15 +588,16 @@ class MainActivity : AppCompatActivity() {
             val on = !Settings.getBool(this, Settings.DESKTOP_MODE, false)
             Settings.setBool(this, Settings.DESKTOP_MODE, on)
             closeMenu()
+            applyDesktopMode(on)
             android.widget.Toast.makeText(this,
-                if (on) "Desktop mode on — reload pages" else "Desktop mode off — reload pages",
+                if (on) "Desktop site on" else "Desktop site off",
                 android.widget.Toast.LENGTH_SHORT).show()
         }
         binding.menuHistory.setOnClickListener {
-            closeMenu(); openDeck(); toggleHistory()
+            closeMenu(); openDeck(); showHistory()
         }
         binding.menuBookmarks.setOnClickListener {
-            closeMenu(); openDeck(); toggleBookmarks()
+            closeMenu(); openDeck(); showBookmarks()
         }
         binding.menuSettings.setOnClickListener {
             closeMenu()
