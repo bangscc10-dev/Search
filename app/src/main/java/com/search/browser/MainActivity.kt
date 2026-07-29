@@ -87,7 +87,25 @@ class MainActivity : AppCompatActivity() {
             javaScriptCanOpenWindowsAutomatically = true
             mediaPlaybackRequiresUserGesture = false
             userAgentString = userAgentString.replace("; wv", "")
+
+            // --- Security toggles ---
+            // Block pop-ups: disallow auto-opening windows when enabled.
+            val blockPopups = Settings.getBool(
+                this@MainActivity, Settings.SEC_BLOCK_POPUPS, true)
+            javaScriptCanOpenWindowsAutomatically = !blockPopups
+            setSupportMultipleWindows(!blockPopups)
+
+            // Safe Browsing (WebView built-in), where supported.
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                safeBrowsingEnabled = Settings.getBool(
+                    this@MainActivity, Settings.SEC_SAFE_BROWSING, true)
+            }
         }
+
+        // Third-party cookie policy.
+        val block3p = Settings.getBool(this, Settings.SEC_BLOCK_3P_COOKIES, false)
+        android.webkit.CookieManager.getInstance()
+            .setAcceptThirdPartyCookies(web, !block3p)
 
         web.addJavascriptInterface(SearchAppBridge(), "SearchApp")
 
@@ -401,6 +419,11 @@ class MainActivity : AppCompatActivity() {
         contentDisposition: String?,
         mimeType: String?
     ) {
+        // If the user disabled download confirmation, download straight away.
+        if (!Settings.getBool(this, Settings.SEC_CONFIRM_DOWNLOADS, true)) {
+            performDownload(url, userAgent, contentDisposition, mimeType)
+            return
+        }
         val fileName = try {
             android.webkit.URLUtil.guessFileName(url, contentDisposition, mimeType)
         } catch (e: Exception) { "file" }
@@ -489,7 +512,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun go(input: String) {
-        val url = UrlHelper.toUrlOrSearch(input, Settings.getEngineUrl(this))
+        var url = UrlHelper.toUrlOrSearch(input, Settings.getEngineUrl(this))
+        // HTTPS-only mode: upgrade insecure http links.
+        if (Settings.getBool(this, Settings.SEC_HTTPS_ONLY, true) &&
+            url.startsWith("http://")) {
+            url = "https://" + url.removePrefix("http://")
+        }
         activeWeb()?.loadUrl(url)
         hideKeyboard()
         activeWeb()?.requestFocus()
