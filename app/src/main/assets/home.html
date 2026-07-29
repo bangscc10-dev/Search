@@ -6,22 +6,14 @@
 <title>Search</title>
 <style>
   :root {
-    --bg: #FAFAFA;
-    --fg: #0E0E10;
-    --muted: #8A8A8F;
-    --line: #E4E4E7;
-    --field: #FFFFFF;
-    --accent: #2B6CF0;
+    --bg: #FAFAFA; --fg: #0E0E10; --muted: #8A8A8F; --line: #E4E4E7;
+    --field: #FFFFFF; --accent: #2B6CF0;
     --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0E0E10;
-      --fg: #FAFAFA;
-      --muted: #8A8A8F;
-      --line: #26262A;
-      --field: #17171A;
-      --accent: #4C8DFF;
+      --bg: #0E0E10; --fg: #FAFAFA; --muted: #8A8A8F; --line: #26262A;
+      --field: #17171A; --accent: #4C8DFF;
       --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
     }
   }
@@ -34,28 +26,15 @@
   }
   .wrap {
     min-height: 100%;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: flex-start;
-    padding: 22vh 24px 40px;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 12vh 22px 40px;
   }
-  .mark {
-    width: 56px; height: 56px; margin-bottom: 18px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .mark svg { width: 100%; height: 100%; display: block; }
-  .wordmark {
-    font-size: 26px; font-weight: 600; letter-spacing: 0.14em;
-    text-transform: none; margin: 0 0 30px;
-    padding-left: 0.14em;
-  }
+  .wordmark { font-size: 34px; font-weight: 700; letter-spacing: 0.02em; margin: 0 0 26px; }
   .field {
-    width: 100%; max-width: 520px;
+    width: 100%; max-width: 540px;
     display: flex; align-items: center; gap: 12px;
-    background: var(--field);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 15px 16px;
-    box-shadow: var(--shadow);
+    background: var(--field); border: 1px solid var(--line);
+    border-radius: 16px; padding: 16px 18px; box-shadow: var(--shadow);
     transition: border-color .15s ease, box-shadow .15s ease;
   }
   .field:focus-within {
@@ -68,48 +47,33 @@
     color: var(--fg); font-size: 16px; font-family: inherit;
   }
   .field input::placeholder { color: var(--muted); }
-
-  .tiles {
-    width: 100%; max-width: 520px;
-    margin-top: 30px;
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  .tiles-card {
+    width: 100%; max-width: 540px; margin-top: 20px;
+    background: var(--field); border: 1px solid var(--line);
+    border-radius: 16px; box-shadow: var(--shadow); padding: 14px 8px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
   }
   .tile {
     display: flex; flex-direction: column; align-items: center; gap: 8px;
-    padding: 14px 6px; border-radius: 12px;
-    text-decoration: none; color: var(--fg);
-    border: 1px solid transparent;
-    transition: background .12s ease, border-color .12s ease;
+    padding: 10px 4px; border-radius: 12px; text-decoration: none; color: var(--fg);
   }
-  .tile:active { background: var(--field); border-color: var(--line); }
+  .tile:active { background: var(--bg); }
   .tile .fav {
-    width: 38px; height: 38px; border-radius: 10px;
-    background: var(--field); border: 1px solid var(--line);
+    width: 40px; height: 40px; border-radius: 11px;
+    background: var(--bg); border: 1px solid var(--line);
     display: flex; align-items: center; justify-content: center;
-    font-size: 16px; font-weight: 600; color: var(--muted);
-    overflow: hidden;
+    font-size: 16px; font-weight: 600; color: var(--muted); overflow: hidden;
   }
   .tile .fav img { width: 100%; height: 100%; object-fit: cover; }
   .tile span {
     font-size: 12px; color: var(--muted);
     max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  @media (max-width: 360px) {
-    .tiles { grid-template-columns: repeat(3, 1fr); }
-  }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="mark">
-      <!-- magnifier: thin circle + handle, lens ring in accent -->
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="21" cy="21" r="13" stroke="var(--accent)" stroke-width="3"/>
-        <line x1="31" y1="31" x2="41" y2="41" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-      </svg>
-    </div>
     <div class="wordmark">Search</div>
-
     <label class="field">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="10.5" cy="10.5" r="6.5" stroke="var(--muted)" stroke-width="2"/>
@@ -119,23 +83,16 @@
              autocapitalize="off" autocorrect="off" spellcheck="false"
              placeholder="Search the web" />
     </label>
-
-    <div class="tiles" id="tiles"></div>
+    <div class="tiles-card" id="tiles"></div>
   </div>
-
 <script>
-  // Submit on Enter -> hand the query to the native app via the JS bridge.
   var input = document.getElementById('q');
   input.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
       var v = input.value.trim();
-      if (v && window.SearchApp && window.SearchApp.submit) {
-        window.SearchApp.submit(v);
-      }
+      if (v && window.SearchApp && window.SearchApp.submit) window.SearchApp.submit(v);
     }
   });
-
-  // Quick-link tiles. Kept generic + editable later.
   var shortcuts = [
     { label: 'Google',    url: 'https://www.google.com' },
     { label: 'YouTube',   url: 'https://m.youtube.com' },
@@ -145,23 +102,15 @@
   var host = document.getElementById('tiles');
   shortcuts.forEach(function (s) {
     var a = document.createElement('a');
-    a.className = 'tile';
-    a.href = 'javascript:void(0)';
-    a.onclick = function () {
-      if (window.SearchApp && window.SearchApp.open) window.SearchApp.open(s.url);
-    };
-    var fav = document.createElement('div');
-    fav.className = 'fav';
-    fav.textContent = s.label.charAt(0);
+    a.className = 'tile'; a.href = 'javascript:void(0)';
+    a.onclick = function () { if (window.SearchApp && window.SearchApp.open) window.SearchApp.open(s.url); };
+    var fav = document.createElement('div'); fav.className = 'fav'; fav.textContent = s.label.charAt(0);
     var img = document.createElement('img');
     var dom = s.url.replace(/^https?:\/\//,'').split('/')[0];
     img.src = 'https://www.google.com/s2/favicons?domain=' + dom + '&sz=64';
     img.onload = function(){ fav.textContent=''; fav.appendChild(img); };
-    img.onerror = function(){ /* keep letter fallback */ };
-    var span = document.createElement('span');
-    span.textContent = s.label;
-    a.appendChild(fav); a.appendChild(span);
-    host.appendChild(a);
+    var span = document.createElement('span'); span.textContent = s.label;
+    a.appendChild(fav); a.appendChild(span); host.appendChild(a);
   });
 </script>
 </body>

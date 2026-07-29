@@ -21,11 +21,18 @@ class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Force true fullscreen — reliably hides the status bar on HiOS/Transsion.
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
-        )
+        // Draw edge-to-edge and hide system bars in immersive-sticky mode.
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        // Let the window draw into the status-bar / cutout region so the
+        // gradient fills the very top instead of leaving a black band.
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            window.attributes = window.attributes.apply {
+                layoutInDisplayCutoutMode =
+                    android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
+        }
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
 
         // Paint the purple gradient at the WINDOW level so no black shows anywhere.
         val windowGrad = GradientDrawable(
@@ -41,8 +48,7 @@ class SplashActivity : AppCompatActivity() {
         )
 
         val web = WebView(this)
-        web.setBackgroundColor(Color.TRANSPARENT)
-        web.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+        web.setBackgroundColor(Color.parseColor("#140E28"))
         web.settings.javaScriptEnabled = true
         web.loadUrl("file:///android_asset/splash.html")
         container.addView(web)
@@ -50,6 +56,11 @@ class SplashActivity : AppCompatActivity() {
 
         window.statusBarColor = Color.TRANSPARENT
         window.navigationBarColor = Color.TRANSPARENT
+
+        val insetsController = androidx.core.view.WindowInsetsControllerCompat(window, container)
+        insetsController.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        insetsController.systemBarsBehavior =
+            androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
         Handler(Looper.getMainLooper()).postDelayed({
             startActivity(Intent(this, MainActivity::class.java))
