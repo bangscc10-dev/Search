@@ -97,6 +97,10 @@ class MainActivity : AppCompatActivity() {
                     t.title = view?.title ?: t.title
                     t.url = url ?: t.url
                 }
+                // Record the visited page in history.
+                if (url != null) {
+                    History.add(this@MainActivity, view?.title ?: "", url)
+                }
                 if (view == tabs.activeTab?.webView) updateNavButtons()
             }
         }
@@ -215,6 +219,13 @@ class MainActivity : AppCompatActivity() {
         binding.deckClose.setOnClickListener { closeDeck() }
         binding.deckNewTab.setOnClickListener { closeDeck(); addNewTab(homePage) }
 
+        binding.deckHistory.setOnClickListener { toggleHistory() }
+        binding.deckHistory.setOnLongClickListener {
+            History.clear(this)
+            if (binding.historyList.visibility == View.VISIBLE) showHistory()
+            true
+        }
+
         binding.deckSearch.setOnEditorActionListener { _, actionId, event ->
             val enter = actionId == EditorInfo.IME_ACTION_GO ||
                 event?.keyCode == KeyEvent.KEYCODE_ENTER
@@ -262,6 +273,43 @@ class MainActivity : AppCompatActivity() {
         else if (wasActive) tabs.tabs.lastOrNull()?.let { tabs.setActive(it) }
         tabAdapter.notifyDataSetChanged()
         updateTabCount()
+    }
+
+    // ---------- History ----------
+
+    private var historyOpen = false
+
+    private fun toggleHistory() {
+        if (historyOpen) hideHistory() else showHistory()
+    }
+
+    private fun showHistory() {
+        val entries = History.load(this)
+        val adapter = HistoryAdapter(
+            entries = entries,
+            onSelect = { entry ->
+                closeDeck()
+                addNewTab(entry.url)
+            },
+            onDelete = { entry ->
+                History.delete(this, entry.url)
+                showHistory()  // rebuild the list without the deleted entry
+            }
+        )
+        binding.historyList.layoutManager =
+            androidx.recyclerview.widget.LinearLayoutManager(this)
+        binding.historyList.adapter = adapter
+        binding.historyList.visibility = View.VISIBLE
+        binding.tabList.visibility = View.GONE
+        binding.deckHistory.setText("Tabs")
+        historyOpen = true
+    }
+
+    private fun hideHistory() {
+        binding.historyList.visibility = View.GONE
+        binding.tabList.visibility = View.VISIBLE
+        binding.deckHistory.setText("History")
+        historyOpen = false
     }
 
     // ---------- UI wiring ----------
