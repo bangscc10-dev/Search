@@ -110,6 +110,15 @@ class MainActivity : AppCompatActivity() {
         web.addJavascriptInterface(SearchAppBridge(), "SearchApp")
 
         web.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(
+                view: WebView?,
+                request: android.webkit.WebResourceRequest?
+            ): android.webkit.WebResourceResponse? {
+                // Ad/tracker blocking (when enabled in settings).
+                return AdBlocker.check(this@MainActivity, request)
+                    ?: super.shouldInterceptRequest(view, request)
+            }
+
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 if (view == tabs.activeTab?.webView) {

@@ -33,6 +33,7 @@ class SectionActivity : AppCompatActivity() {
 
         when (section) {
             SEC_SECURITY -> { title.text = "Search Security"; buildSecurity() }
+            SEC_ADBLOCK -> { title.text = "Ad blocking"; buildAdblock() }
             else -> { title.text = "Coming soon"; addNote("This section is coming soon.") }
         }
     }
@@ -65,6 +66,15 @@ class SectionActivity : AppCompatActivity() {
             "Ask before any file downloads, so nothing saves without your OK.",
             Settings.SEC_CONFIRM_DOWNLOADS, true
         )
+    }
+
+    private fun buildAdblock() {
+        addToggle(
+            "Block ads and trackers",
+            "Blocks common ad networks and trackers for faster, cleaner browsing.",
+            Settings.ADBLOCK_ENABLED, false
+        )
+        addNote("Reload open pages after changing this for it to take full effect.")
     }
 
     // ---- UI builders ----
