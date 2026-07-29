@@ -34,6 +34,7 @@ class SectionActivity : AppCompatActivity() {
         when (section) {
             SEC_SECURITY -> { title.text = "Search Security"; buildSecurity() }
             SEC_ADBLOCK -> { title.text = "Ad blocking"; buildAdblock() }
+            SEC_ACCESSIBILITY -> { title.text = "Accessibility"; buildAccessibility() }
             else -> { title.text = "Coming soon"; addNote("This section is coming soon.") }
         }
     }
@@ -75,6 +76,68 @@ class SectionActivity : AppCompatActivity() {
             Settings.ADBLOCK_ENABLED, false
         )
         addNote("Reload open pages after changing this for it to take full effect.")
+    }
+
+    private fun buildAccessibility() {
+        addNote("Choose how big text appears on web pages. Changes apply right away.")
+
+        val options = listOf(
+            Triple("Small", 85, "Fits more on screen \u2014 great for reading a lot at once."),
+            Triple("Default", 100, "The standard, balanced size."),
+            Triple("Large", 120, "Easier on the eyes \u2014 a comfy bump up."),
+            Triple("Extra large", 150, "Big and bold \u2014 best for tired eyes.")
+        )
+        val current = Settings.getTextScale(this)
+        val textColor = resolveTextColor()
+        val group = android.widget.RadioGroup(this)
+        group.setPadding(dp(16), 0, dp(16), dp(12))
+        content.addView(group)
+
+        var checkId = -1
+        options.forEach { (label, pct, desc) ->
+            // Each option is a vertical block: radio row + sample preview + description
+            val block = LinearLayout(this)
+            block.orientation = LinearLayout.VERTICAL
+            block.setPadding(dp(8), dp(10), dp(8), dp(10))
+
+            val rb = android.widget.RadioButton(this)
+            rb.id = android.view.View.generateViewId()
+            rb.text = "$label  ($pct%)"
+            rb.textSize = 16f
+            rb.setTextColor(textColor)
+            group.addView(rb)
+            if (pct == current) checkId = rb.id
+            rb.setOnClickListener { applyTextSize(label, pct) }
+
+            // Live sample rendered at this size
+            val sample = TextView(this)
+            sample.text = "The quick brown owl reads the web."
+            sample.textSize = 15f * (pct / 100f)
+            sample.setTextColor(textColor)
+            sample.setPadding(dp(34), dp(2), 0, dp(2))
+
+            val d = TextView(this)
+            d.text = desc
+            d.textSize = 12f
+            d.setTextColor(0xFF8A8A8F.toInt())
+            d.setPadding(dp(34), 0, 0, 0)
+
+            // tapping the sample/desc also selects
+            val pick = android.view.View.OnClickListener { rb.isChecked = true; applyTextSize(label, pct) }
+            sample.setOnClickListener(pick)
+            d.setOnClickListener(pick)
+
+            block.addView(sample)
+            block.addView(d)
+            group.addView(block)
+        }
+        if (checkId != -1) group.check(checkId)
+    }
+
+    private fun applyTextSize(label: String, pct: Int) {
+        Settings.setTextScale(this, pct)
+        android.widget.Toast.makeText(this,
+            "Text size: $label", android.widget.Toast.LENGTH_SHORT).show()
     }
 
     // ---- UI builders ----
@@ -139,8 +202,10 @@ class SectionActivity : AppCompatActivity() {
     }
 
     private fun resolveTextColor(): Int {
-        val tv = android.util.TypedValue()
-        theme.resolveAttribute(android.R.attr.textColorPrimary, tv, true)
-        return tv.data
+        // Robust: detect dark mode and return a guaranteed-visible color.
+        val isDark = (resources.configuration.uiMode and
+            android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+            android.content.res.Configuration.UI_MODE_NIGHT_YES
+        return if (isDark) 0xFFFAFAFA.toInt() else 0xFF0E0E10.toInt()
     }
 }

@@ -27,6 +27,13 @@ class MainActivity : AppCompatActivity() {
     // Night Owl (private browsing) mode state.
     private var nightOwl = false
 
+    override fun onResume() {
+        super.onResume()
+        // Re-apply preferences that may have changed in Settings, to all open tabs.
+        val zoom = Settings.getTextScale(this)
+        tabs.tabs.forEach { it.webView?.settings?.textZoom = zoom }
+    }
+
     private lateinit var binding: ActivityMainBinding
     private val homePage = "file:///android_asset/home.html"
     private val tabs = TabManager(maxLiveTabs = 3)
@@ -101,6 +108,9 @@ class MainActivity : AppCompatActivity() {
                 builtInZoomControls = true
                 displayZoomControls = false
             }
+
+            // --- Accessibility: text size ---
+            textZoom = Settings.getTextScale(this@MainActivity)
 
             // --- Security toggles ---
             // Block pop-ups: disallow auto-opening windows when enabled.
