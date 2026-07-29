@@ -22,6 +22,8 @@ class SettingsActivity : AppCompatActivity() {
 
         findViewById<android.widget.ImageButton>(R.id.settingsBack)
             .setOnClickListener { finish() }
+
+        setupSectionRows()
     }
 
     private fun setupEngines() {
@@ -91,5 +93,24 @@ class SettingsActivity : AppCompatActivity() {
             packageManager.getPackageInfo(packageName, 0).versionName
         } catch (e: Exception) { "1.0" }
         about.text = "Search Browser\nVersion $version"
+    }
+
+    private fun openSection(section: String) {
+        val i = android.content.Intent(this, SectionActivity::class.java)
+        i.putExtra(SectionActivity.EXTRA_SECTION, section)
+        startActivity(i)
+    }
+
+    private fun setupSectionRows() {
+        findViewById<android.widget.TextView>(R.id.rowSecurity)
+            .setOnClickListener { openSection(SectionActivity.SEC_SECURITY) }
+        findViewById<android.widget.TextView>(R.id.rowAdblock)
+            .setOnClickListener { openSection(SectionActivity.SEC_ADBLOCK) }
+        findViewById<android.widget.TextView>(R.id.rowSiteSettings)
+            .setOnClickListener { openSection(SectionActivity.SEC_SITE) }
+        findViewById<android.widget.TextView>(R.id.rowAccessibility)
+            .setOnClickListener { openSection(SectionActivity.SEC_ACCESSIBILITY) }
+        findViewById<android.widget.TextView>(R.id.rowCustomize)
+            .setOnClickListener { openSection(SectionActivity.SEC_CUSTOMIZE) }
     }
 }

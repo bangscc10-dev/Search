@@ -5,7 +5,6 @@
     android:orientation="vertical"
     android:background="?android:attr/colorBackground">
 
-    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -41,87 +40,54 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingTop="8dp"
+            android:paddingBottom="24dp">
 
-            <!-- Search engine -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Search engine"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="#8A8A8F"
-                android:paddingBottom="8dp" />
-
+            <TextView style="@style/SettingsHeader" android:text="Search engine" />
             <RadioGroup
                 android:id="@+id/engineGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingBottom="24dp" />
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="12dp" />
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#22808080"
-                android:layout_marginBottom="20dp" />
+            <View style="@style/SettingsDivider" />
 
-            <!-- Theme -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Appearance"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="#8A8A8F"
-                android:paddingBottom="8dp" />
+            <TextView style="@style/SettingsHeader" android:text="Browsing" />
+            <TextView android:id="@+id/rowSecurity" style="@style/SettingsRow" android:text="Search Security" />
+            <TextView android:id="@+id/rowAdblock" style="@style/SettingsRow" android:text="Ad blocking" />
+            <TextView android:id="@+id/rowSiteSettings" style="@style/SettingsRow" android:text="Site settings" />
+            <TextView android:id="@+id/rowAccessibility" style="@style/SettingsRow" android:text="Accessibility" />
+            <TextView android:id="@+id/rowCustomize" style="@style/SettingsRow" android:text="Customize your Search" />
 
+            <View style="@style/SettingsDivider" />
+
+            <TextView style="@style/SettingsHeader" android:text="Appearance" />
             <RadioGroup
                 android:id="@+id/themeGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingBottom="24dp" />
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="12dp" />
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#22808080"
-                android:layout_marginBottom="20dp" />
+            <View style="@style/SettingsDivider" />
 
-            <!-- Clear data -->
-            <TextView
-                android:id="@+id/clearData"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Clear browsing data"
-                android:textSize="16sp"
-                android:textColor="#E53935"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:background="?attr/selectableItemBackground" />
+            <TextView android:id="@+id/clearData" style="@style/SettingsRow"
+                android:text="Clear browsing data" android:textColor="#E53935" />
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#22808080"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="20dp" />
+            <View style="@style/SettingsDivider" />
 
-            <!-- About -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="About"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="#8A8A8F"
-                android:paddingBottom="8dp" />
-
+            <TextView style="@style/SettingsHeader" android:text="About" />
             <TextView
                 android:id="@+id/aboutText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
                 android:text="Search Browser"
                 android:textSize="15sp"
                 android:textColor="?android:attr/textColorPrimary" />

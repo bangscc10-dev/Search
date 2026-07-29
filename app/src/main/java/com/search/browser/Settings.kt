@@ -43,4 +43,27 @@ object Settings {
     fun setTheme(c: Context, mode: Int) {
         prefs(c).edit().putInt(KEY_THEME, mode).apply()
     }
+
+    // ---- Generic boolean toggles (security, adblock, etc.) ----
+    fun getBool(c: Context, key: String, default: Boolean): Boolean =
+        prefs(c).getBoolean(key, default)
+
+    fun setBool(c: Context, key: String, value: Boolean) {
+        prefs(c).edit().putBoolean(key, value).apply()
+    }
+
+    // Security keys + defaults
+    const val SEC_HTTPS_ONLY = "sec_https_only"       // default true
+    const val SEC_SAFE_BROWSING = "sec_safe_browsing" // default true
+    const val SEC_BLOCK_POPUPS = "sec_block_popups"   // default true
+    const val SEC_BLOCK_3P_COOKIES = "sec_block_3p_cookies" // default false
+    const val SEC_CONFIRM_DOWNLOADS = "sec_confirm_downloads" // default true
+
+    // Adblock
+    const val ADBLOCK_ENABLED = "adblock_enabled"     // default false
+
+    // Accessibility
+    const val A11Y_TEXT_SCALE = "a11y_text_scale"     // int percent, default 100
+    fun getTextScale(c: Context): Int = prefs(c).getInt(A11Y_TEXT_SCALE, 100)
+    fun setTextScale(c: Context, pct: Int) { prefs(c).edit().putInt(A11Y_TEXT_SCALE, pct).apply() }
 }
