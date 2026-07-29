@@ -129,6 +129,10 @@ class MainActivity : AppCompatActivity() {
             }
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
+                // Cosmetic ad-hiding: hide common ad containers when blocking is on.
+                if (AdBlocker.isEnabled(this@MainActivity)) {
+                    view?.evaluateJavascript(AdBlocker.hideCss(), null)
+                }
                 tabs.activeTab?.let { t ->
                     t.title = view?.title ?: t.title
                     t.url = url ?: t.url

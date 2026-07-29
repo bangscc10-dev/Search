@@ -52,4 +52,19 @@ object AdBlocker {
         val url = request?.url?.toString() ?: return null
         return if (isBlocked(url)) EMPTY else null
     }
+
+    /** JS that injects CSS to hide common ad slots/containers. */
+    fun hideCss(): String {
+        val css = listOf(
+            "[id*='ad-']", "[id*='-ad']", "[class*='ad-']", "[class*='-ad']",
+            "[class*='ads']", "[id*='ads']", "[class*='banner']", "[id*='banner']",
+            "[class*='sponsor']", "[class*='popup']", "[id*='popup']",
+            "iframe[src*='ad']", "ins.adsbygoogle", "[class*='adsbox']",
+            "[aria-label*='advert']", "[class*='promoted']"
+        ).joinToString(",")
+        val js = "(function(){try{var s=document.createElement('style');" +
+            "s.innerHTML='" + css + "{display:none !important;visibility:hidden !important;}';" +
+            "document.head.appendChild(s);}catch(e){}})();"
+        return js
+    }
 }
