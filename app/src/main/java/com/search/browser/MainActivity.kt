@@ -123,6 +123,12 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        // Handle file downloads via Android's DownloadManager.
+        web.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
+            startDownload(url, userAgent, contentDisposition, mimeType)
+        }
+
         return web
     }
 
@@ -319,6 +325,85 @@ class MainActivity : AppCompatActivity() {
         binding.tabList.visibility = View.VISIBLE
         binding.deckHistory.setText("History")
         historyOpen = false
+    }
+
+    // ---------- Downloads ----------
+
+    /**
+     * Security gate: every download — whether the user tapped it or a site
+     * triggered it silently — must be confirmed here before it proceeds.
+     * This stops websites from secretly downloading files to the device.
+     */
+    private fun startDownload(
+        url: String,
+        userAgent: String?,
+        contentDisposition: String?,
+        mimeType: String?
+    ) {
+        val fileName = try {
+            android.webkit.URLUtil.guessFileName(url, contentDisposition, mimeType)
+        } catch (e: Exception) { "file" }
+
+        val view = layoutInflater.inflate(R.layout.dialog_download, null)
+        view.findViewById<android.widget.TextView>(R.id.dlFileName).text = fileName
+
+        val dialog = android.app.AlertDialog.Builder(this)
+            .setView(view)
+            .setCancelable(false)
+            .create()
+        // Transparent window so our rounded layout shows cleanly.
+        dialog.window?.setBackgroundDrawable(
+            android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT)
+        )
+
+        view.findViewById<android.widget.TextView>(R.id.dlConfirm).setOnClickListener {
+            dialog.dismiss()
+            performDownload(url, userAgent, contentDisposition, mimeType)
+        }
+        view.findViewById<android.widget.TextView>(R.id.dlCancel).setOnClickListener {
+            dialog.dismiss()
+            android.widget.Toast.makeText(
+                this, "Download cancelled", android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
+        dialog.show()
+        // Constrain the dialog to a compact card width.
+        dialog.window?.let { w ->
+            val dm = resources.displayMetrics
+            val width = (dm.widthPixels * 0.86f).toInt()
+            w.setLayout(width, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+    }
+
+    private fun performDownload(
+        url: String,
+        userAgent: String?,
+        contentDisposition: String?,
+        mimeType: String?
+    ) {
+        try {
+            val fileName = android.webkit.URLUtil.guessFileName(url, contentDisposition, mimeType)
+            val request = android.app.DownloadManager.Request(android.net.Uri.parse(url))
+            request.setMimeType(mimeType)
+            userAgent?.let { request.addRequestHeader("User-Agent", it) }
+            request.setTitle(fileName)
+            request.setDescription("Downloading…")
+            request.setNotificationVisibility(
+                android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+            )
+            request.setDestinationInExternalPublicDir(
+                android.os.Environment.DIRECTORY_DOWNLOADS, fileName
+            )
+            val dm = getSystemService(DOWNLOAD_SERVICE) as android.app.DownloadManager
+            dm.enqueue(request)
+            android.widget.Toast.makeText(
+                this, "Downloading $fileName", android.widget.Toast.LENGTH_SHORT
+            ).show()
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(
+                this, "Download failed", android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     // ---------- UI wiring ----------
