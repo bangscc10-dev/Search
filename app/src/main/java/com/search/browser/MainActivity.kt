@@ -24,6 +24,9 @@ import com.search.browser.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
+    // Night Owl (private browsing) mode state.
+    private var nightOwl = false
+
     private lateinit var binding: ActivityMainBinding
     private val homePage = "file:///android_asset/home.html"
     private val tabs = TabManager(maxLiveTabs = 3)
@@ -160,8 +163,8 @@ class MainActivity : AppCompatActivity() {
                     t.title = view?.title ?: t.title
                     t.url = url ?: t.url
                 }
-                // Record the visited page in history.
-                if (url != null) {
+                // Record the visited page in history (never in Night Owl mode).
+                if (url != null && !nightOwl) {
                     History.add(this@MainActivity, view?.title ?: "", url)
                 }
                 if (view == tabs.activeTab?.webView) { updateNavButtons(); refreshStar() }
@@ -300,7 +303,65 @@ class MainActivity : AppCompatActivity() {
         web.reload()
     }
 
+    private fun enterNightOwl() {
+        nightOwl = true
+        // Isolate the private session: no disk cache, no form/password saving.
+        activeWeb()?.settings?.apply {
+            cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
+            saveFormData = false
+        }
+        // Don't persist cookies created during Night Owl.
+        android.webkit.CookieManager.getInstance().setAcceptCookie(true)
+        // Visual indicator.
+        binding.nightOwlBadge.visibility = View.VISIBLE
+        applyNightOwlChrome(true)
+        // Fresh private tab.
+        addNewTab(homePage)
+        android.widget.Toast.makeText(this,
+            "Night Owl on — private browsing", android.widget.Toast.LENGTH_SHORT).show()
+    }
+
+    private fun exitNightOwl() {
+        nightOwl = false
+        // Wipe session data created during Night Owl.
+        android.webkit.CookieManager.getInstance().removeSessionCookies(null)
+        android.webkit.WebStorage.getInstance().deleteAllData()
+        activeWeb()?.clearCache(true)
+        binding.nightOwlBadge.visibility = View.GONE
+        applyNightOwlChrome(false)
+        android.widget.Toast.makeText(this,
+            "Night Owl off", android.widget.Toast.LENGTH_SHORT).show()
+    }
+
+    private fun applyNightOwlChrome(on: Boolean) {
+        val topBar = binding.homeBtn.parent as? View
+        val controller = androidx.core.view.WindowInsetsControllerCompat(window, window.decorView)
+
+        // Detect dark mode.
+        val isDark = (resources.configuration.uiMode and
+            android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+            android.content.res.Configuration.UI_MODE_NIGHT_YES
+
+        if (on) {
+            // Subtle purple wash matched to the theme.
+            val tint = if (isDark) "#231A3A" else "#ECE7F5"
+            topBar?.setBackgroundColor(android.graphics.Color.parseColor(tint))
+            window.statusBarColor = android.graphics.Color.parseColor(tint)
+            // Icons: light icons on dark tint, dark icons on light tint.
+            controller.isAppearanceLightStatusBars = !isDark
+        } else {
+            topBar?.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            val tv = android.util.TypedValue()
+            theme.resolveAttribute(android.R.attr.colorBackground, tv, true)
+            window.statusBarColor = tv.data
+            controller.isAppearanceLightStatusBars = !isDark
+        }
+    }
+
     private fun openMenu() {
+        // Reflect current Night Owl state in the menu label.
+        (binding.menuNightOwl.getChildAt(1) as? android.widget.TextView)?.text =
+            if (nightOwl) "Exit Night Owl" else "Night Owl"
         binding.menuScrim.visibility = View.VISIBLE
     }
 
@@ -582,7 +643,7 @@ class MainActivity : AppCompatActivity() {
         }
         binding.menuNightOwl.setOnClickListener {
             closeMenu()
-            android.widget.Toast.makeText(this, "Night Owl coming soon", android.widget.Toast.LENGTH_SHORT).show()
+            if (nightOwl) exitNightOwl() else enterNightOwl()
         }
         binding.menuDesktop.setOnClickListener {
             val on = !Settings.getBool(this, Settings.DESKTOP_MODE, false)
