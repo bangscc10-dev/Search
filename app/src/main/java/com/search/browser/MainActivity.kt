@@ -88,6 +88,15 @@ class MainActivity : AppCompatActivity() {
             mediaPlaybackRequiresUserGesture = false
             userAgentString = userAgentString.replace("; wv", "")
 
+            // --- Desktop mode ---
+            if (Settings.getBool(this@MainActivity, Settings.DESKTOP_MODE, false)) {
+                userAgentString =
+                    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 " +
+                    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                useWideViewPort = true
+                loadWithOverviewMode = true
+            }
+
             // --- Security toggles ---
             // Block pop-ups: disallow auto-opening windows when enabled.
             val blockPopups = Settings.getBool(
@@ -245,6 +254,14 @@ class MainActivity : AppCompatActivity() {
         (web.parent as? ViewGroup)?.removeView(web)
         web.destroy()
         tab.webView = null
+    }
+
+    private fun openMenu() {
+        binding.menuScrim.visibility = View.VISIBLE
+    }
+
+    private fun closeMenu() {
+        binding.menuScrim.visibility = View.GONE
     }
 
     private fun addNewTab(loadUrl: String = homePage) {
@@ -517,7 +534,35 @@ class MainActivity : AppCompatActivity() {
         binding.reloadBtn.setOnClickListener { activeWeb()?.reload() }
         binding.homeBtn.setOnClickListener { activeWeb()?.loadUrl(homePage) }
         binding.tabCountBtn.setOnClickListener { openDeck() }
-        binding.settingsBtn.setOnClickListener {
+        binding.settingsBtn.setOnClickListener { openMenu() }
+
+        // Menu scrim tap closes the menu
+        binding.menuScrim.setOnClickListener { closeMenu() }
+
+        // Menu items
+        binding.menuNewTab.setOnClickListener {
+            closeMenu(); addNewTab(homePage)
+        }
+        binding.menuNightOwl.setOnClickListener {
+            closeMenu()
+            android.widget.Toast.makeText(this, "Night Owl coming soon", android.widget.Toast.LENGTH_SHORT).show()
+        }
+        binding.menuDesktop.setOnClickListener {
+            val on = !Settings.getBool(this, Settings.DESKTOP_MODE, false)
+            Settings.setBool(this, Settings.DESKTOP_MODE, on)
+            closeMenu()
+            android.widget.Toast.makeText(this,
+                if (on) "Desktop mode on — reload pages" else "Desktop mode off — reload pages",
+                android.widget.Toast.LENGTH_SHORT).show()
+        }
+        binding.menuHistory.setOnClickListener {
+            closeMenu(); openDeck(); toggleHistory()
+        }
+        binding.menuBookmarks.setOnClickListener {
+            closeMenu(); openDeck(); toggleBookmarks()
+        }
+        binding.menuSettings.setOnClickListener {
+            closeMenu()
             startActivity(android.content.Intent(this, SettingsActivity::class.java))
         }
 

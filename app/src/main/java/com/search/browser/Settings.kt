@@ -62,6 +62,9 @@ object Settings {
     // Adblock
     const val ADBLOCK_ENABLED = "adblock_enabled"     // default false
 
+    // Desktop mode
+    const val DESKTOP_MODE = "desktop_mode"           // default false
+
     // Accessibility
     const val A11Y_TEXT_SCALE = "a11y_text_scale"     // int percent, default 100
     fun getTextScale(c: Context): Int = prefs(c).getInt(A11Y_TEXT_SCALE, 100)
