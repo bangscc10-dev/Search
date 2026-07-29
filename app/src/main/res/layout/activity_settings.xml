@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?android:attr/colorBackground">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="8dp"
+        android:paddingEnd="16dp">
+
+        <ImageButton
+            android:id="@+id/settingsBack"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:contentDescription="Close" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Settings"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Search engine -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Search engine"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#8A8A8F"
+                android:paddingBottom="8dp" />
+
+            <RadioGroup
+                android:id="@+id/engineGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="24dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#22808080"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Theme -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Appearance"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#8A8A8F"
+                android:paddingBottom="8dp" />
+
+            <RadioGroup
+                android:id="@+id/themeGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="24dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#22808080"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Clear data -->
+            <TextView
+                android:id="@+id/clearData"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Clear browsing data"
+                android:textSize="16sp"
+                android:textColor="#E53935"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:background="?attr/selectableItemBackground" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#22808080"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="20dp" />
+
+            <!-- About -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="About"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#8A8A8F"
+                android:paddingBottom="8dp" />
+
+            <TextView
+                android:id="@+id/aboutText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Search Browser"
+                android:textSize="15sp"
+                android:textColor="?android:attr/textColorPrimary" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

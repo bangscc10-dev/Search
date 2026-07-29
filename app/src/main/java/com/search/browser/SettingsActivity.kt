@@ -1,0 +1,95 @@
+package com.search.browser
+
+import android.app.AlertDialog
+import android.os.Bundle
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+
+class SettingsActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_settings)
+
+        setupEngines()
+        setupTheme()
+        setupClearData()
+        setupAbout()
+
+        findViewById<android.widget.ImageButton>(R.id.settingsBack)
+            .setOnClickListener { finish() }
+    }
+
+    private fun setupEngines() {
+        val group = findViewById<RadioGroup>(R.id.engineGroup)
+        val current = Settings.getEngineName(this)
+        Settings.ENGINES.keys.forEach { name ->
+            val rb = RadioButton(this)
+            rb.text = name
+            rb.textSize = 16f
+            rb.setPadding(8, 20, 8, 20)
+            rb.isChecked = (name == current)
+            rb.setOnClickListener {
+                Settings.setEngine(this, name)
+                Toast.makeText(this, "Search engine: $name", Toast.LENGTH_SHORT).show()
+            }
+            group.addView(rb)
+        }
+    }
+
+    private fun setupTheme() {
+        val group = findViewById<RadioGroup>(R.id.themeGroup)
+        val labels = listOf("Follow system", "Light", "Dark")
+        val modes = listOf(Settings.THEME_SYSTEM, Settings.THEME_LIGHT, Settings.THEME_DARK)
+        val current = Settings.getTheme(this)
+        labels.forEachIndexed { i, label ->
+            val rb = RadioButton(this)
+            rb.text = label
+            rb.textSize = 16f
+            rb.setPadding(8, 20, 8, 20)
+            rb.isChecked = (modes[i] == current)
+            rb.setOnClickListener {
+                Settings.setTheme(this, modes[i])
+                applyTheme(modes[i])
+            }
+            group.addView(rb)
+        }
+    }
+
+    private fun applyTheme(mode: Int) {
+        when (mode) {
+            Settings.THEME_LIGHT ->
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            Settings.THEME_DARK ->
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            else ->
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        }
+    }
+
+    private fun setupClearData() {
+        findViewById<TextView>(R.id.clearData).setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Clear browsing data")
+                .setMessage("This clears your history. Continue?")
+                .setPositiveButton("Clear") { _, _ ->
+                    History.clear(this)
+                    Toast.makeText(this, "Browsing data cleared", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+    }
+
+    private fun setupAbout() {
+        val about = findViewById<TextView>(R.id.aboutText)
+        val version = try {
+            packageManager.getPackageInfo(packageName, 0).versionName
+        } catch (e: Exception) { "1.0" }
+        about.text = "Search Browser\nVersion $version"
+    }
+}

@@ -29,7 +29,7 @@ object UrlHelper {
 
     private const val GOOGLE_SEARCH = "https://www.google.com/search?q="
 
-    fun toUrlOrSearch(raw: String): String {
+    fun toUrlOrSearch(raw: String, searchPrefix: String = GOOGLE_SEARCH): String {
         val text = raw.trim()
         if (text.isEmpty()) return GOOGLE_SEARCH
 
@@ -48,13 +48,13 @@ object UrlHelper {
         if (Patterns.IP_ADDRESS.matcher(hostForIp).matches()) return "http://$text"
 
         // 4. Spaces -> search
-        if (text.contains(" ")) return search(text)
+        if (text.contains(" ")) return search(text, searchPrefix)
 
         // 5. Domain with a *known* TLD -> load
         if (looksLikeDomain(text)) return "https://$text"
 
         // 6. Fallback -> search
-        return search(text)
+        return search(text, searchPrefix)
     }
 
     private fun looksLikeDomain(text: String): Boolean {
@@ -72,5 +72,5 @@ object UrlHelper {
         return tld in KNOWN_TLDS
     }
 
-    private fun search(query: String): String = GOOGLE_SEARCH + Uri.encode(query)
+    private fun search(query: String, prefix: String): String = prefix + Uri.encode(query)
 }

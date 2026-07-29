@@ -18,6 +18,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Search" />
+
+        <activity
             android:name=".SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.Search.Splash">

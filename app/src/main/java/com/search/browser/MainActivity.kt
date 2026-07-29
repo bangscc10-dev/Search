@@ -34,6 +34,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Apply the saved theme preference before inflating.
+        when (Settings.getTheme(this)) {
+            Settings.THEME_LIGHT -> androidx.appcompat.app.AppCompatDelegate
+                .setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO)
+            Settings.THEME_DARK -> androidx.appcompat.app.AppCompatDelegate
+                .setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES)
+            else -> androidx.appcompat.app.AppCompatDelegate
+                .setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        }
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -233,7 +242,7 @@ class MainActivity : AppCompatActivity() {
                 val q = binding.deckSearch.text.toString()
                 if (q.isNotBlank()) {
                     closeDeck()
-                    addNewTab(UrlHelper.toUrlOrSearch(q))
+                    addNewTab(UrlHelper.toUrlOrSearch(q, Settings.getEngineUrl(this)))
                     binding.deckSearch.setText("")
                 }
                 true
@@ -326,10 +335,13 @@ class MainActivity : AppCompatActivity() {
         binding.reloadBtn.setOnClickListener { activeWeb()?.reload() }
         binding.homeBtn.setOnClickListener { activeWeb()?.loadUrl(homePage) }
         binding.tabCountBtn.setOnClickListener { openDeck() }
+        binding.settingsBtn.setOnClickListener {
+            startActivity(android.content.Intent(this, SettingsActivity::class.java))
+        }
     }
 
     private fun go(input: String) {
-        val url = UrlHelper.toUrlOrSearch(input)
+        val url = UrlHelper.toUrlOrSearch(input, Settings.getEngineUrl(this))
         activeWeb()?.loadUrl(url)
         hideKeyboard()
         activeWeb()?.requestFocus()
