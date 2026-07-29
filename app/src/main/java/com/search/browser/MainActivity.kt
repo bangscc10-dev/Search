@@ -110,7 +110,7 @@ class MainActivity : AppCompatActivity() {
                 if (url != null) {
                     History.add(this@MainActivity, view?.title ?: "", url)
                 }
-                if (view == tabs.activeTab?.webView) updateNavButtons()
+                if (view == tabs.activeTab?.webView) { updateNavButtons(); refreshStar() }
             }
         }
 
@@ -202,6 +202,7 @@ class MainActivity : AppCompatActivity() {
         binding.urlBar.setText(displayUrl(tab.url))
         updateNavButtons()
         updateTabCount()
+        refreshStar()
     }
 
     private fun freezeTab(tab: Tab) {
@@ -235,6 +236,7 @@ class MainActivity : AppCompatActivity() {
         binding.deckNewTab.setOnClickListener { closeDeck(); addNewTab(homePage) }
 
         binding.deckHistory.setOnClickListener { toggleHistory() }
+        binding.deckBookmarks.setOnClickListener { toggleBookmarks() }
         binding.deckHistory.setOnLongClickListener {
             History.clear(this)
             if (binding.historyList.visibility == View.VISIBLE) showHistory()
@@ -316,8 +318,43 @@ class MainActivity : AppCompatActivity() {
         binding.historyList.adapter = adapter
         binding.historyList.visibility = View.VISIBLE
         binding.tabList.visibility = View.GONE
+        binding.bookmarkList.visibility = View.GONE
         binding.deckHistory.setText("Tabs")
+        binding.deckBookmarks.setText("Saved")
         historyOpen = true
+        bookmarksOpen = false
+    }
+
+    private var bookmarksOpen = false
+
+    private fun toggleBookmarks() {
+        if (bookmarksOpen) hideBookmarks() else showBookmarks()
+    }
+
+    private fun showBookmarks() {
+        val entries = Bookmarks.load(this).map { History.Entry(it.title, it.url, it.time) }
+        val adapter = HistoryAdapter(
+            entries = entries,
+            onSelect = { entry -> closeDeck(); addNewTab(entry.url) },
+            onDelete = { entry -> Bookmarks.remove(this, entry.url); showBookmarks() }
+        )
+        binding.bookmarkList.layoutManager =
+            androidx.recyclerview.widget.LinearLayoutManager(this)
+        binding.bookmarkList.adapter = adapter
+        binding.bookmarkList.visibility = View.VISIBLE
+        binding.tabList.visibility = View.GONE
+        binding.historyList.visibility = View.GONE
+        binding.deckBookmarks.setText("Tabs")
+        binding.deckHistory.setText("History")
+        bookmarksOpen = true
+        historyOpen = false
+    }
+
+    private fun hideBookmarks() {
+        binding.bookmarkList.visibility = View.GONE
+        binding.tabList.visibility = View.VISIBLE
+        binding.deckBookmarks.setText("Saved")
+        bookmarksOpen = false
     }
 
     private fun hideHistory() {
@@ -325,6 +362,30 @@ class MainActivity : AppCompatActivity() {
         binding.tabList.visibility = View.VISIBLE
         binding.deckHistory.setText("History")
         historyOpen = false
+    }
+
+    // ---------- Bookmarks ----------
+
+    private fun toggleBookmark() {
+        val tab = tabs.activeTab ?: return
+        val url = tab.url
+        if (url.isBlank() || url.startsWith("file:///android_asset/")) return
+        if (Bookmarks.isBookmarked(this, url)) {
+            Bookmarks.remove(this, url)
+            android.widget.Toast.makeText(this, "Bookmark removed", android.widget.Toast.LENGTH_SHORT).show()
+        } else {
+            Bookmarks.add(this, tab.title, url)
+            android.widget.Toast.makeText(this, "Bookmarked", android.widget.Toast.LENGTH_SHORT).show()
+        }
+        refreshStar()
+    }
+
+    private fun refreshStar() {
+        val url = tabs.activeTab?.url ?: ""
+        val marked = url.isNotBlank() && Bookmarks.isBookmarked(this, url)
+        binding.starBtn.setImageResource(
+            if (marked) R.drawable.ic_star_filled else R.drawable.ic_star_outline
+        )
     }
 
     // ---------- Downloads ----------
@@ -423,6 +484,8 @@ class MainActivity : AppCompatActivity() {
         binding.settingsBtn.setOnClickListener {
             startActivity(android.content.Intent(this, SettingsActivity::class.java))
         }
+
+        binding.starBtn.setOnClickListener { toggleBookmark() }
     }
 
     private fun go(input: String) {
