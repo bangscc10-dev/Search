@@ -74,6 +74,13 @@ class MainActivity : AppCompatActivity() {
         fun submit(query: String) { runOnUiThread { go(query) } }
         @JavascriptInterface
         fun open(url: String) { runOnUiThread { activeWeb()?.loadUrl(url) } }
+        @JavascriptInterface
+        fun getConfig(): String {
+            val bg = Settings.getHomeBackground(this@MainActivity)
+            val accent = Settings.getHomeAccent(this@MainActivity)
+            val tiles = Settings.getBool(this@MainActivity, Settings.HOME_SHOW_TILES, true)
+            return "{\"background\":\"$bg\",\"accent\":\"$accent\",\"tiles\":$tiles}"
+        }
     }
 
     // ---------- WebView creation / lifecycle ----------

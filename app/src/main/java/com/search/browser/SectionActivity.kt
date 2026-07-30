@@ -35,6 +35,7 @@ class SectionActivity : AppCompatActivity() {
             SEC_SECURITY -> { title.text = "Search Security"; buildSecurity() }
             SEC_ADBLOCK -> { title.text = "Ad blocking"; buildAdblock() }
             SEC_ACCESSIBILITY -> { title.text = "Accessibility"; buildAccessibility() }
+            SEC_CUSTOMIZE -> { title.text = "Customize your Search"; buildCustomize() }
             else -> { title.text = "Coming soon"; addNote("This section is coming soon.") }
         }
     }
@@ -138,6 +139,56 @@ class SectionActivity : AppCompatActivity() {
         Settings.setTextScale(this, pct)
         android.widget.Toast.makeText(this,
             "Text size: $label", android.widget.Toast.LENGTH_SHORT).show()
+    }
+
+    private fun buildCustomize() {
+        addNote("Accent color")
+        val accents = listOf(
+            "#2B6CF0" to "Blue", "#8B6BD8" to "Purple", "#2FB170" to "Green",
+            "#F5A623" to "Amber", "#E5556E" to "Rose", "#0E0E10" to "Ink"
+        )
+        val curAccent = Settings.getHomeAccent(this)
+        val row = LinearLayout(this)
+        row.orientation = LinearLayout.HORIZONTAL
+        row.setPadding(dp(20), dp(4), dp(20), dp(12))
+        accents.forEach { (hex, name) ->
+            val sw = android.view.View(this)
+            val size = dp(40)
+            val lp = LinearLayout.LayoutParams(size, size)
+            lp.marginEnd = dp(12)
+            sw.layoutParams = lp
+            val bg = android.graphics.drawable.GradientDrawable()
+            bg.shape = android.graphics.drawable.GradientDrawable.OVAL
+            bg.setColor(android.graphics.Color.parseColor(hex))
+            if (hex.equals(curAccent, true)) bg.setStroke(dp(3), resolveTextColor())
+            sw.background = bg
+            sw.setOnClickListener {
+                Settings.setHomeAccent(this, hex)
+                android.widget.Toast.makeText(this, "Accent: $name", android.widget.Toast.LENGTH_SHORT).show()
+                recreate()
+            }
+            row.addView(sw)
+        }
+        content.addView(row)
+
+        addDivider()
+
+        addToggle(
+            "Show shortcut tiles",
+            "Display the quick links (Google, YouTube, etc.) on the home page.",
+            Settings.HOME_SHOW_TILES, true
+        )
+        addNote("Open a new tab to see your changes.")
+    }
+
+    private fun addDivider() {
+        val div = TextView(this)
+        div.layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(1))
+        div.setBackgroundColor(0x22808080)
+        (div.layoutParams as LinearLayout.LayoutParams).apply {
+            topMargin = dp(8); bottomMargin = dp(8) }
+        content.addView(div)
     }
 
     // ---- UI builders ----

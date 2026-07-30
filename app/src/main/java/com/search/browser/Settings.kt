@@ -65,6 +65,19 @@ object Settings {
     // Desktop mode
     const val DESKTOP_MODE = "desktop_mode"           // default false
 
+    // Customize your Search (home page)
+    const val HOME_BACKGROUND = "home_background"      // "clean" | "gradient" | "dark"
+    const val HOME_ACCENT = "home_accent"              // hex string
+    const val HOME_SHOW_TILES = "home_show_tiles"      // default true
+
+    fun getHomeBackground(c: Context): String =
+        prefs(c).getString(HOME_BACKGROUND, "clean") ?: "clean"
+    fun setHomeBackground(c: Context, v: String) { prefs(c).edit().putString(HOME_BACKGROUND, v).apply() }
+
+    fun getHomeAccent(c: Context): String =
+        prefs(c).getString(HOME_ACCENT, "#2B6CF0") ?: "#2B6CF0"
+    fun setHomeAccent(c: Context, v: String) { prefs(c).edit().putString(HOME_ACCENT, v).apply() }
+
     // Accessibility
     const val A11Y_TEXT_SCALE = "a11y_text_scale"     // int percent, default 100
     fun getTextScale(c: Context): Int = prefs(c).getInt(A11Y_TEXT_SCALE, 100)

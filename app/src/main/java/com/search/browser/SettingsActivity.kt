@@ -31,15 +31,16 @@ class SettingsActivity : AppCompatActivity() {
         val current = Settings.getEngineName(this)
         Settings.ENGINES.keys.forEach { name ->
             val rb = RadioButton(this)
+            rb.id = android.view.View.generateViewId()
             rb.text = name
             rb.textSize = 16f
             rb.setPadding(8, 20, 8, 20)
-            rb.isChecked = (name == current)
             rb.setOnClickListener {
                 Settings.setEngine(this, name)
                 Toast.makeText(this, "Search engine: $name", Toast.LENGTH_SHORT).show()
             }
             group.addView(rb)
+            if (name == current) group.check(rb.id)
         }
     }
 
@@ -50,15 +51,16 @@ class SettingsActivity : AppCompatActivity() {
         val current = Settings.getTheme(this)
         labels.forEachIndexed { i, label ->
             val rb = RadioButton(this)
+            rb.id = android.view.View.generateViewId()
             rb.text = label
             rb.textSize = 16f
             rb.setPadding(8, 20, 8, 20)
-            rb.isChecked = (modes[i] == current)
             rb.setOnClickListener {
                 Settings.setTheme(this, modes[i])
                 applyTheme(modes[i])
             }
             group.addView(rb)
+            if (modes[i] == current) group.check(rb.id)
         }
     }
 
