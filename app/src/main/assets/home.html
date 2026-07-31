@@ -20,28 +20,54 @@
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body { margin:0; padding:0; height:100%; background:var(--bg); color:var(--fg);
     font-family:-apple-system,"Roboto","Segoe UI",system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
-  .wrap { min-height:100%; display:flex; flex-direction:column; align-items:center; padding:12vh 22px 40px; }
+  .wrap { min-height:100%; display:flex; flex-direction:column; align-items:center;
+    padding:8vh 22px 40px; transition:padding-top .15s ease; }
 
   .wordmark {
-    font-size:clamp(38px, 11vw, 52px);
+    font-size:clamp(44px, 12vw, 58px);
     font-weight:800;
     letter-spacing:-0.01em;
-    margin:0 0 28px;
+    margin:0 0 26px;
     color:var(--accent);
     text-shadow:0 4px 18px rgba(0,0,0,0.08);
   }
+  .wrap.search-mode .wordmark,
+  .wrap.search-mode .shortcuts { display:none; }
+  .wrap.search-mode { padding-top:14px; }
 
+  /* The search pill — no icon, just the input. This is the working
+     omnibox for the home page: SearchApp.submit() feeds straight into
+     the same go() the native address bar uses everywhere else. */
   .field {
-    width:100%; max-width:520px; display:flex; align-items:center; gap:12px;
+    width:100%; max-width:520px;
     background:var(--field); border:1px solid var(--line);
-    border-radius:28px; padding:15px 20px; box-shadow:var(--shadow);
+    border-radius:28px; padding:16px 22px; box-shadow:var(--shadow);
     transition:border-color .15s ease;
   }
   .field:focus-within { border-color:var(--accent); }
-  .field svg { width:20px; height:20px; flex:none; color:var(--muted); }
-  .field input { flex:1; border:none; outline:none; background:transparent; color:var(--fg); font-size:16px; font-family:inherit; }
+  .field input {
+    width:100%; border:none; outline:none; background:transparent;
+    color:var(--fg); font-size:16px; font-family:inherit;
+  }
   .field input::placeholder { color:var(--muted); }
 
+  /* Live suggestion cards, shown only once the field is focused. */
+  .suggestions {
+    display:none; width:100%; max-width:520px; margin-top:10px;
+    flex-direction:column; gap:2px;
+  }
+  .wrap.search-mode .suggestions { display:flex; }
+  .suggestion {
+    display:flex; align-items:center; gap:14px;
+    padding:12px 14px; border-radius:14px; cursor:pointer;
+  }
+  .suggestion:active { background:rgba(128,128,128,0.12); }
+  .suggestion .icon { width:18px; height:18px; flex:none; color:var(--muted); }
+  .suggestion .text { flex:1; min-width:0; }
+  .suggestion .title { font-size:15px; color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .suggestion .sub { font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  /* Shortcut row: floating circular icons, Google-NTP style — no card shell. */
   .shortcuts {
     width:100%; max-width:420px;
     display:grid; grid-template-columns:repeat(4,1fr);
@@ -69,12 +95,12 @@
 </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="wrap" id="wrap">
     <div class="wordmark">Search</div>
-    <label class="field">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <label class="field" id="field">
       <input id="q" type="text" inputmode="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Search the web" />
     </label>
+    <div class="suggestions" id="suggestions"></div>
     <div class="shortcuts" id="tiles"></div>
   </div>
 <script>
@@ -87,7 +113,39 @@
     }
   } catch (e) {}
 
+  // ---------- Search field + live suggestions ----------
+  var wrap = document.getElementById('wrap');
   var input = document.getElementById('q');
+  var suggBox = document.getElementById('suggestions');
+  var reqSeq = 0;
+  var debounceTimer = null;
+
+  var ICONS = {
+    web: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+    history: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+    bookmark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>'
+  };
+
+  function fireSuggest(q) {
+    var id = ++reqSeq;
+    if (window.SearchApp && window.SearchApp.suggest) window.SearchApp.suggest(q, id);
+  }
+
+  input.addEventListener('focus', function () {
+    wrap.classList.add('search-mode');
+    fireSuggest(input.value.trim());
+  });
+  input.addEventListener('blur', function () {
+    // Small delay so a tap on a suggestion card registers before we tear the list down.
+    setTimeout(function () {
+      wrap.classList.remove('search-mode');
+      suggBox.innerHTML = '';
+    }, 120);
+  });
+  input.addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function () { fireSuggest(input.value.trim()); }, 150);
+  });
   input.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
       var v = input.value.trim();
@@ -95,6 +153,44 @@
     }
   });
 
+  // Called by MainActivity once a suggest() request resolves.
+  window.__onSuggest = function (id, items) {
+    if (id !== reqSeq) return; // a newer keystroke already superseded this response
+    suggBox.innerHTML = '';
+    items.forEach(function (item) {
+      var row = document.createElement('div');
+      row.className = 'suggestion';
+      var icon = document.createElement('span');
+      icon.className = 'icon';
+      icon.innerHTML = ICONS[item.kind] || ICONS.web;
+      var text = document.createElement('span');
+      text.className = 'text';
+      var title = document.createElement('span');
+      title.className = 'title';
+      title.textContent = item.title;
+      text.appendChild(title);
+      if (item.kind !== 'web') {
+        var sub = document.createElement('span');
+        sub.className = 'sub';
+        sub.textContent = item.url;
+        text.appendChild(sub);
+      }
+      row.appendChild(icon);
+      row.appendChild(text);
+      // Prevent the input from blurring before the click registers.
+      row.addEventListener('mousedown', function (e) { e.preventDefault(); });
+      row.addEventListener('click', function () {
+        if (item.kind === 'web') {
+          if (window.SearchApp && window.SearchApp.submit) window.SearchApp.submit(item.title);
+        } else if (window.SearchApp && window.SearchApp.open) {
+          window.SearchApp.open(item.url);
+        }
+      });
+      suggBox.appendChild(row);
+    });
+  };
+
+  // ---------- Shortcut tiles ----------
   var host = document.getElementById('tiles');
   if (!showTiles) { host.classList.add('hidden'); }
   else {

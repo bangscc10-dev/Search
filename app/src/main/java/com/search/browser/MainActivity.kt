@@ -21,6 +21,11 @@ import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import com.search.browser.databinding.ActivityMainBinding
+import org.json.JSONArray
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLEncoder
 
 class MainActivity : AppCompatActivity() {
 
@@ -81,6 +86,76 @@ class MainActivity : AppCompatActivity() {
             val tiles = Settings.getBool(this@MainActivity, Settings.HOME_SHOW_TILES, true)
             return "{\"background\":\"$bg\",\"accent\":\"$accent\",\"tiles\":$tiles}"
         }
+        @JavascriptInterface
+        fun suggest(query: String, requestId: Int) {
+            Thread {
+                val items = buildSuggestions(query.trim())
+                runOnUiThread { pushSuggestions(requestId, items) }
+            }.start()
+        }
+    }
+
+    private fun localSuggestionMatches(query: String, limit: Int): List<Triple<String, String, String>> {
+        val marks = Bookmarks.load(this).filter { matchesQuery(it.title, it.url, query) }
+            .map { Triple("bookmark", it.title, it.url) }
+        val hist = History.load(this).filter { matchesQuery(it.title, it.url, query) }
+            .map { Triple("history", it.title, it.url) }
+        return (marks + hist).distinctBy { it.third }.take(limit)
+    }
+
+    private fun matchesQuery(title: String, url: String, query: String): Boolean {
+        if (query.isEmpty()) return true
+        val q = query.lowercase()
+        return title.lowercase().contains(q) || url.lowercase().contains(q)
+    }
+
+    private fun fetchWebSuggestions(query: String): List<String> {
+        if (query.isEmpty()) return emptyList()
+        val q = URLEncoder.encode(query, "UTF-8")
+        val endpoint = when (Settings.getEngineName(this)) {
+            "DuckDuckGo" -> "https://duckduckgo.com/ac/?type=list&q=$q"
+            "Bing" -> "https://api.bing.com/osjson.aspx?query=$q"
+            else -> "https://www.google.com/complete/search?client=chrome&q=$q"
+        }
+        return try {
+            val conn = URL(endpoint).openConnection() as HttpURLConnection
+            conn.connectTimeout = 3000
+            conn.readTimeout = 3000
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0")
+            val body = conn.inputStream.bufferedReader().use { it.readText() }
+            conn.disconnect()
+            val cleaned = body.trim().removePrefix(")]}'").trim()
+            val list = JSONArray(cleaned).optJSONArray(1) ?: return emptyList()
+            (0 until list.length()).mapNotNull { i -> list.optString(i, null) }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun buildSuggestions(query: String): List<JSONObject> {
+        val local = localSuggestionMatches(query, if (query.isEmpty()) 5 else 3)
+        val web = if (query.isEmpty()) emptyList() else fetchWebSuggestions(query)
+        val seen = local.map { it.third.lowercase() }.toMutableSet()
+        val out = mutableListOf<JSONObject>()
+        local.forEach { (kind, title, url) ->
+            out += JSONObject().put("kind", kind).put("title", title).put("url", url)
+        }
+        web.forEach { text ->
+            val key = text.lowercase()
+            if (out.size < 7 && key !in seen) {
+                seen += key
+                out += JSONObject().put("kind", "web").put("title", text)
+            }
+        }
+        return out
+    }
+
+    private fun pushSuggestions(requestId: Int, items: List<JSONObject>) {
+        val web = activeWeb() ?: return
+        val payload = JSONArray(items).toString()
+        val js = "window.__onSuggest && window.__onSuggest(" + requestId + ", JSON.parse(" +
+            JSONObject.quote(payload) + "));"
+        web.evaluateJavascript(js, null)
     }
 
     // ---------- WebView creation / lifecycle ----------
