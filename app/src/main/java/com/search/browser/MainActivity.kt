@@ -155,6 +155,7 @@ class MainActivity : AppCompatActivity() {
                 if (view == tabs.activeTab?.webView) {
                     if (!binding.urlBar.hasFocus()) binding.urlBar.setText(displayUrl(url))
                     updateNavButtons()
+                    refreshOmniboxVisibility(url)
                 }
                 url?.let { tabs.activeTab?.url = it }
             }
@@ -184,7 +185,9 @@ class MainActivity : AppCompatActivity() {
                 if (url != null && !nightOwl) {
                     History.add(this@MainActivity, view?.title ?: "", url)
                 }
-                if (view == tabs.activeTab?.webView) { updateNavButtons(); refreshStar() }
+                if (view == tabs.activeTab?.webView) {
+                    updateNavButtons(); refreshStar(); refreshOmniboxVisibility(url)
+                }
             }
         }
 
@@ -277,6 +280,19 @@ class MainActivity : AppCompatActivity() {
         updateNavButtons()
         updateTabCount()
         refreshStar()
+        refreshOmniboxVisibility(tab.url)
+    }
+
+    /**
+     * The home/new-tab page has its own search field under the wordmark,
+     * so the native address bar (and the star button riding along with it)
+     * is hidden while it's showing — that top-bar space just sits empty,
+     * the same way it does on any other page before you start typing.
+     * Everywhere else, the native bar behaves exactly as it always has.
+     */
+    private fun refreshOmniboxVisibility(url: String?) {
+        val isHome = url == null || url == homePage
+        binding.urlBarContainer.visibility = if (isHome) View.INVISIBLE else View.VISIBLE
     }
 
     private fun freezeTab(tab: Tab) {
