@@ -80,6 +80,30 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun open(url: String) { runOnUiThread { activeWeb()?.loadUrl(url) } }
         @JavascriptInterface
+        fun getRecentSites(): String {
+            // Return up to 8 most-recent unique domains from history as JSON.
+            val entries = History.load(this@MainActivity)
+            val seen = LinkedHashSet<String>()
+            val out = StringBuilder("[")
+            var count = 0
+            for (e in entries) {
+                if (count >= 8) break
+                val host = try {
+                    android.net.Uri.parse(e.url).host ?: continue
+                } catch (ex: Exception) { continue }
+                val domain = host.removePrefix("www.")
+                if (domain.isBlank() || !seen.add(domain)) continue
+                if (count > 0) out.append(",")
+                val safeUrl = e.url.replace("\\", "\\\\").replace("\"", "\\\"")
+                out.append("{\"domain\":\"").append(domain).append("\",")
+                out.append("\"url\":\"").append(safeUrl).append("\"}")
+                count++
+            }
+            out.append("]")
+            return out.toString()
+        }
+
+        @JavascriptInterface
         fun getConfig(): String {
             val bg = Settings.getHomeBackground(this@MainActivity)
             val accent = Settings.getHomeAccent(this@MainActivity)
