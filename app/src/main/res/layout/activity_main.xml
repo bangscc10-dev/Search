@@ -199,6 +199,15 @@
             android:visibility="gone" />
     </LinearLayout>
 
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/suggestOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="54dp"
+        android:background="?android:attr/colorBackground"
+        android:visibility="gone" />
+
     <!-- ===== Slide-in menu panel (hidden by default) ===== -->
     <FrameLayout
         android:id="@+id/menuScrim"

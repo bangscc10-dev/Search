@@ -31,9 +31,6 @@
     color:var(--accent);
     text-shadow:0 4px 18px rgba(0,0,0,0.08);
   }
-  .wrap.search-mode .wordmark,
-  .wrap.search-mode .shortcuts { display:none; }
-  .wrap.search-mode { padding-top:14px; }
 
   /* The search pill — no icon, just the input. This is the working
      omnibox for the home page: SearchApp.submit() feeds straight into
@@ -51,37 +48,6 @@
   }
   .field input::placeholder { color:var(--muted); }
 
-  /* Live suggestion cards, shown only once the field is focused. */
-  .suggestions {
-    display:none; width:100%; max-width:520px; margin-top:10px;
-    flex-direction:column; gap:2px;
-  }
-  .wrap.search-mode .suggestions { display:flex; }
-  .suggestion {
-    display:flex; align-items:center; gap:14px;
-    width:100%; max-width:100%; min-width:0;
-    padding:12px 14px; border-radius:14px; cursor:pointer;
-    overflow:hidden;
-  }
-  .suggestion:active { background:rgba(128,128,128,0.12); }
-  .suggestion .icon { width:18px; height:18px; flex:none; color:var(--muted); }
-  .suggestion .text {
-    flex:1 1 auto;
-    min-width:0;
-    max-width:100%;
-    overflow:hidden;
-  }
-  .suggestion .title { font-size:15px; color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .suggestion .sub {
-    font-size:12px;
-    color:var(--muted);
-    white-space:normal;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    overflow-wrap:anywhere;
-    word-break:break-word;
-    min-width:0;
-  }
 
   /* Shortcut row: floating circular icons, Google-NTP style — no card shell. */
   .shortcuts {
@@ -116,7 +82,6 @@
     <label class="field" id="field">
       <input id="q" type="text" inputmode="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Search the web" />
     </label>
-    <div class="suggestions" id="suggestions"></div>
     <div class="shortcuts" id="tiles"></div>
   </div>
 <script>
@@ -129,76 +94,14 @@
     }
   } catch (e) {}
 
-  // ---------- Search field + live suggestions ----------
-  var wrap = document.getElementById('wrap');
+  // ---------- Search box: dumb button that opens the native search page ----------
   var input = document.getElementById('q');
-  var suggBox = document.getElementById('suggestions');
-  var reqSeq = 0;
-  var debounceTimer = null;
-
-  var ICONS = {
-    web: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
-    history: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
-    bookmark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>'
-  };
-
-  function fireSuggest(q) {
-    var id = ++reqSeq;
-    if (window.SearchApp && window.SearchApp.suggest) window.SearchApp.suggest(q, id);
+  input.readOnly = true;  // no typing here; the native omnibox handles input
+  function openNativeSearch() {
+    if (window.SearchApp && window.SearchApp.focusSearch) window.SearchApp.focusSearch();
   }
-
-  input.addEventListener('focus', function () {
-    wrap.classList.add('search-mode');
-    fireSuggest(input.value.trim());
-  });
-  input.addEventListener('blur', function () {
-    // Small delay so a tap on a suggestion card registers before we tear the list down.
-    setTimeout(function () {
-      wrap.classList.remove('search-mode');
-      suggBox.innerHTML = '';
-    }, 120);
-  });
-  input.addEventListener('input', function () {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(function () { fireSuggest(input.value.trim()); }, 150);
-  });
-  input.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-      var v = input.value.trim();
-      if (v && window.SearchApp && window.SearchApp.submit) window.SearchApp.submit(v);
-    }
-  });
-
-  // Called by MainActivity once a suggest() request resolves.
-  window.__onSuggest = function (id, items) {
-    if (id !== reqSeq) return; // a newer keystroke already superseded this response
-    suggBox.innerHTML = '';
-    items.forEach(function (item) {
-      var row = document.createElement('div');
-      row.className = 'suggestion';
-      var icon = document.createElement('span');
-      icon.className = 'icon';
-      icon.innerHTML = ICONS[item.kind] || ICONS.web;
-      var text = document.createElement('span');
-      text.className = 'text';
-      var title = document.createElement('span');
-      title.className = 'title';
-      title.textContent = item.title;
-      text.appendChild(title);
-      row.appendChild(icon);
-      row.appendChild(text);
-      // Prevent the input from blurring before the click registers.
-      row.addEventListener('mousedown', function (e) { e.preventDefault(); });
-      row.addEventListener('click', function () {
-        if (item.kind === 'web') {
-          if (window.SearchApp && window.SearchApp.submit) window.SearchApp.submit(item.title);
-        } else if (window.SearchApp && window.SearchApp.open) {
-          window.SearchApp.open(item.url);
-        }
-      });
-      suggBox.appendChild(row);
-    });
-  };
+  input.addEventListener('focus', function () { input.blur(); openNativeSearch(); });
+  input.addEventListener('click', openNativeSearch);
 
   // ---------- Shortcut tiles ----------
   var host = document.getElementById('tiles');

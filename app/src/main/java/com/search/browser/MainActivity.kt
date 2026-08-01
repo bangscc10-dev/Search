@@ -1,5 +1,7 @@
 package com.search.browser
 
+
+
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -28,6 +30,78 @@ import java.net.URL
 import java.net.URLEncoder
 
 class MainActivity : AppCompatActivity() {
+
+    // ---- Native search-page mode ----
+    private var searchMode = false
+    private var suggestAdapter: SuggestAdapter? = null
+    private var suggestSeq = 0
+
+    private fun setupSuggestOverlay() {
+        suggestAdapter = SuggestAdapter(emptyList()) { item ->
+            val kind = item.optString("kind")
+            val title = item.optString("title")
+            val url = item.optString("url")
+            exitSearchMode()
+            if (kind == "web" || url.isBlank()) go(title) else activeWeb()?.loadUrl(url)
+        }
+        binding.suggestOverlay.layoutManager =
+            androidx.recyclerview.widget.LinearLayoutManager(this)
+        binding.suggestOverlay.adapter = suggestAdapter
+    }
+
+    private fun fetchSuggests(query: String) {
+        val id = ++suggestSeq
+        Thread {
+            val items = buildSuggestions(query.trim())
+            runOnUiThread { if (id == suggestSeq && searchMode) suggestAdapter?.submit(items) }
+        }.start()
+    }
+
+    private fun enterSearchMode() {
+        if (searchMode) return
+        searchMode = true
+        binding.homeBtn.visibility = View.GONE
+        binding.reloadBtn.visibility = View.GONE
+        binding.tabCountBtn.visibility = View.GONE
+        binding.settingsBtn.visibility = View.GONE
+        binding.starBtn.visibility = View.GONE
+        binding.urlBarContainer.visibility = View.VISIBLE
+        val current = tabs.activeTab?.url
+        val onHome = (current == null || current == homePage)
+        if (onHome) binding.urlBar.setText("") else {
+            binding.urlBar.setText(current); binding.urlBar.selectAll()
+        }
+        binding.urlBar.requestFocus()
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        imm.showSoftInput(binding.urlBar, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+        binding.suggestOverlay.visibility = View.VISIBLE
+        fetchSuggests(binding.urlBar.text.toString())
+    }
+
+    private fun exitSearchMode() {
+        if (!searchMode) return
+        searchMode = false
+        binding.suggestOverlay.visibility = View.GONE
+        suggestAdapter?.submit(emptyList())
+        binding.homeBtn.visibility = View.VISIBLE
+        binding.reloadBtn.visibility = View.VISIBLE
+        binding.tabCountBtn.visibility = View.VISIBLE
+        binding.settingsBtn.visibility = View.VISIBLE
+        binding.starBtn.visibility = View.VISIBLE
+        binding.urlBar.clearFocus()
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        imm.hideSoftInputFromWindow(binding.urlBar.windowToken, 0)
+        val current = tabs.activeTab?.url
+        val onHome = (current == null || current == homePage)
+        if (onHome) {
+            binding.urlBarContainer.visibility = View.INVISIBLE
+            binding.urlBar.setText("")
+        } else {
+            binding.urlBarContainer.visibility = View.VISIBLE
+            binding.urlBar.setText(displayUrl(current))
+        }
+    }
+
 
     // Night Owl (private browsing) mode state.
     private var nightOwl = false
@@ -60,6 +134,21 @@ class MainActivity : AppCompatActivity() {
         }
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setupSuggestOverlay()
+
+        onBackPressedDispatcher.addCallback(this, object :
+            androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                val web = activeWeb()
+                when {
+                    searchMode -> exitSearchMode()
+                    binding.menuScrim.visibility == View.VISIBLE -> closeMenu()
+                    binding.tabDeck.visibility == View.VISIBLE -> closeDeck()
+                    web?.canGoBack() == true -> web.goBack()
+                    else -> finish()
+                }
+            }
+        })
 
         tabs.onNeedFreeze = { tab -> freezeTab(tab) }
 
@@ -79,6 +168,8 @@ class MainActivity : AppCompatActivity() {
         fun submit(query: String) { runOnUiThread { go(query) } }
         @JavascriptInterface
         fun open(url: String) { runOnUiThread { activeWeb()?.loadUrl(url) } }
+        @JavascriptInterface
+        fun focusSearch() { runOnUiThread { enterSearchMode() } }
         @JavascriptInterface
         fun getRecentSites(): String {
             // Return up to 8 most-recent unique domains from history as JSON.
@@ -250,6 +341,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                if (searchMode && url != null && url != homePage) exitSearchMode()
                 super.onPageStarted(view, url, favicon)
                 if (view == tabs.activeTab?.webView) {
                     if (!binding.urlBar.hasFocus()) binding.urlBar.setText(displayUrl(url))
@@ -753,6 +845,17 @@ class MainActivity : AppCompatActivity() {
     // ---------- UI wiring ----------
 
     private fun setupUrlBar() {
+        binding.urlBar.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus && !searchMode) enterSearchMode()
+        }
+        binding.urlBar.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(cs: CharSequence?, a: Int, b: Int, c: Int) {}
+            override fun onTextChanged(cs: CharSequence?, a: Int, b: Int, c: Int) {}
+            override fun afterTextChanged(e: android.text.Editable?) {
+                if (searchMode) fetchSuggests(e?.toString() ?: "")
+            }
+        })
+
         binding.urlBar.setOnEditorActionListener { _, actionId, event ->
             val enter = actionId == EditorInfo.IME_ACTION_GO ||
                 event?.keyCode == KeyEvent.KEYCODE_ENTER
@@ -801,6 +904,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun go(input: String) {
+        if (searchMode) exitSearchMode()
         var url = UrlHelper.toUrlOrSearch(input, Settings.getEngineUrl(this))
         // HTTPS-only mode: upgrade insecure http links.
         if (Settings.getBool(this, Settings.SEC_HTTPS_ONLY, true) &&
@@ -823,14 +927,5 @@ class MainActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(binding.urlBar.windowToken, 0)
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK && binding.tabDeck.visibility == View.VISIBLE) {
-            closeDeck(); return true
-        }
-        val web = activeWeb()
-        if (keyCode == KeyEvent.KEYCODE_BACK && web?.canGoBack() == true) {
-            web.goBack(); return true
-        }
-        return super.onKeyDown(keyCode, event)
-    }
+
 }
