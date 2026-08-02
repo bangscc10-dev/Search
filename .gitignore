@@ -19,3 +19,4 @@ local.properties
 # APK outputs
 *.apk
 *.aab
+keystore.properties
