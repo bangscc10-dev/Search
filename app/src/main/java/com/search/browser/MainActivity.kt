@@ -143,14 +143,6 @@ class MainActivity : AppCompatActivity() {
         // full effect on the next navigation.
     }
 
-    // With uiMode in configChanges, a device-level dark/light switch no longer
-    // recreates this activity (which would wipe non-active tab state). We repaint
-    // the chrome in place so colors still follow the new system mode.
-    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
-        super.onConfigurationChanged(newConfig)
-        applyNightOwlChrome(nightOwl)
-    }
-
     private lateinit var binding: ActivityMainBinding
     private val homePage = "file:///android_asset/home.html"
     private val tabs = TabManager(maxLiveTabs = 3)
