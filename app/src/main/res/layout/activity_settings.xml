@@ -91,6 +91,10 @@
                 android:text="Search Browser"
                 android:textSize="15sp"
                 android:textColor="?android:attr/textColorPrimary" />
+
+            <View style="@style/SettingsDivider" />
+            <TextView android:id="@+id/rowPrivacy" style="@style/SettingsRow" android:text="Privacy Policy" />
+            <TextView android:id="@+id/rowTerms" style="@style/SettingsRow" android:text="Terms of Use" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

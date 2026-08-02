@@ -114,5 +114,16 @@ class SettingsActivity : AppCompatActivity() {
             .setOnClickListener { openSection(SectionActivity.SEC_ACCESSIBILITY) }
         findViewById<android.widget.TextView>(R.id.rowCustomize)
             .setOnClickListener { openSection(SectionActivity.SEC_CUSTOMIZE) }
+        findViewById<android.widget.TextView>(R.id.rowPrivacy)
+            .setOnClickListener { openPage("file:///android_asset/privacy.html") }
+        findViewById<android.widget.TextView>(R.id.rowTerms)
+            .setOnClickListener { openPage("file:///android_asset/terms.html") }
+    }
+
+    private fun openPage(url: String) {
+        val i = android.content.Intent(this, MainActivity::class.java)
+        i.putExtra("open_url", url)
+        i.flags = android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+        startActivity(i)
     }
 }

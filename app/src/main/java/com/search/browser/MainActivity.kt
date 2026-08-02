@@ -197,6 +197,21 @@ class MainActivity : AppCompatActivity() {
             tabs.activeTab?.let { openTab(it) }
         }
         updateTabCount()
+
+        // Handle a page requested from Settings (Privacy / Terms).
+        intent?.getStringExtra("open_url")?.let { url ->
+            addNewTab(url)
+            intent.removeExtra("open_url")
+        }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        intent.getStringExtra("open_url")?.let { url ->
+            addNewTab(url)
+            intent.removeExtra("open_url")
+        }
     }
 
     // ---------- JS bridge ----------

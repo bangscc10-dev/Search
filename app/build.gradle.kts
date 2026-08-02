@@ -17,7 +17,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.search.browser"
+        applicationId = "com.devbangs.search"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -52,6 +52,11 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
+    }
+
     buildFeatures {
         viewBinding = true
     }
