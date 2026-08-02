@@ -114,12 +114,15 @@
   function buildTile(label, url){
     var a=document.createElement('a'); a.className='tile'; a.href='javascript:void(0)';
     a.onclick=function(){ if(window.SearchApp&&window.SearchApp.open) window.SearchApp.open(url); };
-    var fav=document.createElement('div'); fav.className='fav'; fav.textContent=label.charAt(0);
-    var img=document.createElement('img'); var dom=url.replace(/^https?:\/\//,'').split('/')[0];
-    img.src='https://www.google.com/s2/favicons?domain='+dom+'&sz=128';
-    img.onload=function(){ fav.textContent=''; fav.appendChild(img); };
+    var fav=document.createElement('div'); fav.className='fav';
+    fav.textContent=label.charAt(0).toUpperCase();
     var span=document.createElement('span'); span.textContent=label;
     a.appendChild(fav); a.appendChild(span); host.appendChild(a);
+    var dom=url.replace(/^https?:\/\//,'').split('/')[0].replace(/^www\./,'');
+    var img=document.createElement('img');
+    img.src='https://www.google.com/s2/favicons?domain='+dom+'&sz=128';
+    img.onload=function(){ fav.textContent=''; fav.appendChild(img); };
+    img.onerror=function(){ /* keep the grey letter */ };
   }
 
   var DEFAULTS=[{label:'Google',url:'https://www.google.com'},{label:'YouTube',url:'https://m.youtube.com'},{label:'Wikipedia',url:'https://wikipedia.org'},{label:'GitHub',url:'https://github.com'}];

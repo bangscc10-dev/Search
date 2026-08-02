@@ -36,6 +36,7 @@ class SectionActivity : AppCompatActivity() {
             SEC_ADBLOCK -> { title.text = "Ad blocking"; buildAdblock() }
             SEC_ACCESSIBILITY -> { title.text = "Accessibility"; buildAccessibility() }
             SEC_CUSTOMIZE -> { title.text = "Customize your Search"; buildCustomize() }
+            SEC_SITE -> { title.text = "Site settings"; buildSite() }
             else -> { title.text = "Coming soon"; addNote("This section is coming soon.") }
         }
     }
@@ -189,6 +190,35 @@ class SectionActivity : AppCompatActivity() {
         (div.layoutParams as LinearLayout.LayoutParams).apply {
             topMargin = dp(8); bottomMargin = dp(8) }
         content.addView(div)
+    }
+
+    private fun buildSite() {
+        addToggle(
+            "JavaScript",
+            "Let websites run scripts. Turning this off breaks many sites but boosts privacy.",
+            Settings.SITE_JAVASCRIPT, true
+        )
+        addToggle(
+            "Location access",
+            "Allow sites to request your location.",
+            Settings.SITE_LOCATION, true
+        )
+        addToggle(
+            "Camera & microphone",
+            "Allow sites to request camera and mic access.",
+            Settings.SITE_CAMERA_MIC, true
+        )
+        addToggle(
+            "Block autoplay",
+            "Stop videos and audio from playing automatically.",
+            Settings.SITE_BLOCK_AUTOPLAY, true
+        )
+        addToggle(
+            "Data saver (block images)",
+            "Skip loading images for faster browsing and less data use.",
+            Settings.SITE_BLOCK_IMAGES, false
+        )
+        addNote("Reload open pages for changes to take effect.")
     }
 
     // ---- UI builders ----

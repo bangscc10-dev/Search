@@ -3,6 +3,7 @@ package com.search.browser
 
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Build
@@ -33,6 +34,18 @@ class MainActivity : AppCompatActivity() {
 
     // ---- Native search-page mode ----
     private var searchMode = false
+
+    // Tracks the site-settings signature last applied, so we only reload when it changed.
+    private var lastSiteSig: String = ""
+
+    private fun siteSettingsSignature(): String {
+        return listOf(
+            Settings.getBool(this, Settings.SITE_JAVASCRIPT, true),
+            Settings.getBool(this, Settings.SITE_BLOCK_IMAGES, false),
+            Settings.getBool(this, Settings.SITE_BLOCK_AUTOPLAY, true),
+            Settings.getTextScale(this)
+        ).joinToString("|")
+    }
     private var suggestAdapter: SuggestAdapter? = null
     private var suggestSeq = 0
 
@@ -108,9 +121,25 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Re-apply preferences that may have changed in Settings, to all open tabs.
+        val sig = siteSettingsSignature()
+        if (sig == lastSiteSig) return  // nothing changed -> don't touch anything
+        lastSiteSig = sig
+
         val zoom = Settings.getTextScale(this)
-        tabs.tabs.forEach { it.webView?.settings?.textZoom = zoom }
+        val js = Settings.getBool(this, Settings.SITE_JAVASCRIPT, true)
+        val blockImg = Settings.getBool(this, Settings.SITE_BLOCK_IMAGES, false)
+        val blockAutoplay = Settings.getBool(this, Settings.SITE_BLOCK_AUTOPLAY, true)
+        tabs.tabs.forEach { tab ->
+            tab.webView?.settings?.apply {
+                textZoom = zoom
+                javaScriptEnabled = js
+                blockNetworkImage = blockImg
+                mediaPlaybackRequiresUserGesture = blockAutoplay
+            }
+        }
+        // Settings are applied live to the WebView above; we do NOT reload,
+        // because reloading wipes the tab's back/forward history. Changes take
+        // full effect on the next navigation.
     }
 
     private lateinit var binding: ActivityMainBinding
@@ -135,6 +164,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setupSuggestOverlay()
+        lastSiteSig = siteSettingsSignature()
 
         onBackPressedDispatcher.addCallback(this, object :
             androidx.activity.OnBackPressedCallback(true) {
@@ -156,8 +186,15 @@ class MainActivity : AppCompatActivity() {
         setupToolbar()
         setupDeck()
 
-        val first = tabs.createTab(homePage)
-        openTab(first, homePage)
+        // Only create the initial home tab on a genuine fresh start.
+        // Prevents losing your open tab if the activity is recreated (e.g. returning from Settings).
+        if (tabs.count() == 0) {
+            val first = tabs.createTab(homePage)
+            openTab(first, homePage)
+        } else {
+            // Re-attach the existing active tab's view.
+            tabs.activeTab?.let { openTab(it) }
+        }
         updateTabCount()
     }
 
@@ -170,6 +207,19 @@ class MainActivity : AppCompatActivity() {
         fun open(url: String) { runOnUiThread { activeWeb()?.loadUrl(url) } }
         @JavascriptInterface
         fun focusSearch() { runOnUiThread { enterSearchMode() } }
+        @JavascriptInterface
+        fun cacheFavicon(domain: String, dataUrl: String) {
+            if (domain.isBlank() || dataUrl.isBlank()) return
+            getSharedPreferences("favicon_cache", Context.MODE_PRIVATE)
+                .edit().putString(domain, dataUrl).apply()
+        }
+
+        @JavascriptInterface
+        fun getCachedFavicon(domain: String): String {
+            return getSharedPreferences("favicon_cache", Context.MODE_PRIVATE)
+                .getString(domain, "") ?: ""
+        }
+
         @JavascriptInterface
         fun getRecentSites(): String {
             // Return up to 8 most-recent unique domains from history as JSON.
@@ -283,7 +333,7 @@ class MainActivity : AppCompatActivity() {
             ViewGroup.LayoutParams.MATCH_PARENT
         )
         web.settings.apply {
-            javaScriptEnabled = true
+            javaScriptEnabled = Settings.getBool(this@MainActivity, Settings.SITE_JAVASCRIPT, true)
             domStorageEnabled = true
             databaseEnabled = true
             loadWithOverviewMode = true
@@ -292,7 +342,12 @@ class MainActivity : AppCompatActivity() {
             displayZoomControls = false
             setSupportZoom(true)
             javaScriptCanOpenWindowsAutomatically = true
-            mediaPlaybackRequiresUserGesture = false
+            mediaPlaybackRequiresUserGesture =
+                Settings.getBool(this@MainActivity, Settings.SITE_BLOCK_AUTOPLAY, true)
+
+            // Data saver: block images when enabled.
+            blockNetworkImage = Settings.getBool(this@MainActivity, Settings.SITE_BLOCK_IMAGES, false)
+
             userAgentString = userAgentString.replace("; wv", "")
 
             // --- Desktop mode ---
@@ -383,6 +438,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         web.webChromeClient = object : WebChromeClient() {
+            // Location: honor the Site setting.
+            override fun onGeolocationPermissionsShowPrompt(
+                origin: String?,
+                callback: android.webkit.GeolocationPermissions.Callback?
+            ) {
+                val allow = Settings.getBool(this@MainActivity, Settings.SITE_LOCATION, true)
+                callback?.invoke(origin, allow, false)
+            }
+
+            // Camera & microphone: honor the Site setting.
+            override fun onPermissionRequest(request: android.webkit.PermissionRequest?) {
+                val allow = Settings.getBool(this@MainActivity, Settings.SITE_CAMERA_MIC, true)
+                runOnUiThread {
+                    if (allow) request?.grant(request.resources) else request?.deny()
+                }
+            }
+
             override fun onProgressChanged(view: WebView?, newProgress: Int) {
                 if (view == tabs.activeTab?.webView) {
                     binding.progressBar.progress = newProgress

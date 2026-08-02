@@ -65,6 +65,14 @@ object Settings {
     // Desktop mode
     const val DESKTOP_MODE = "desktop_mode"           // default false
 
+    // Site settings (what websites are allowed to do)
+    const val SITE_JAVASCRIPT = "site_javascript"      // default true
+    const val SITE_LOCATION = "site_location"          // default true (ask)
+    const val SITE_CAMERA_MIC = "site_camera_mic"      // default true (ask)
+    const val SITE_BLOCK_AUTOPLAY = "site_block_autoplay" // default true
+    const val SITE_FORCE_DARK = "site_force_dark"      // default false
+    const val SITE_BLOCK_IMAGES = "site_block_images"  // default false
+
     // Customize your Search (home page)
     const val HOME_BACKGROUND = "home_background"      // "clean" | "gradient" | "dark"
     const val HOME_ACCENT = "home_accent"              // hex string
