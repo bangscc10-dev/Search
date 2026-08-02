@@ -34,6 +34,7 @@ class MainActivity : AppCompatActivity() {
 
     // ---- Native search-page mode ----
     private var searchMode = false
+    private var lastFailedUrl: String? = null
 
     // Tracks the site-settings signature last applied, so we only reload when it changed.
     private var lastSiteSig: String = ""
@@ -207,6 +208,15 @@ class MainActivity : AppCompatActivity() {
         fun open(url: String) { runOnUiThread { activeWeb()?.loadUrl(url) } }
         @JavascriptInterface
         fun focusSearch() { runOnUiThread { enterSearchMode() } }
+
+        @JavascriptInterface
+        fun retry() {
+            runOnUiThread {
+                val target = lastFailedUrl
+                if (target != null) activeWeb()?.loadUrl(target)
+                else activeWeb()?.reload()
+            }
+        }
         @JavascriptInterface
         fun cacheFavicon(domain: String, dataUrl: String) {
             if (domain.isBlank() || dataUrl.isBlank()) return
@@ -393,6 +403,19 @@ class MainActivity : AppCompatActivity() {
                 // Ad/tracker blocking (when enabled in settings).
                 return AdBlocker.check(this@MainActivity, request)
                     ?: super.shouldInterceptRequest(view, request)
+            }
+
+            override fun onReceivedError(
+                view: WebView?,
+                request: android.webkit.WebResourceRequest?,
+                error: android.webkit.WebResourceError?
+            ) {
+                super.onReceivedError(view, request, error)
+                // Only replace the main-frame failure (not sub-resources like images/ads).
+                if (request?.isForMainFrame == true) {
+                    lastFailedUrl = request.url?.toString()
+                    view?.loadUrl("file:///android_asset/offline.html")
+                }
             }
 
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {

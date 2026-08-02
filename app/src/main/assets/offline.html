@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Offline</title>
+<style>
+  :root { --bg:#FAFAFA; --fg:#0E0E10; --muted:#8A8A8F; --accent:#5E44A0; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0E0E10; --fg:#FAFAFA; --muted:#8A8A8F; --accent:#8B6BD8; }
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,"Roboto","Segoe UI",system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  .wrap { min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:40px 28px; text-align:center; }
+  .owl { width:96px; height:96px; margin-bottom:24px; opacity:0.9; }
+  h1 { font-size:22px; font-weight:700; margin:0 0 12px; letter-spacing:-0.01em; }
+  p { font-size:15px; color:var(--muted); margin:0 0 28px; max-width:320px; line-height:1.5; }
+  .retry {
+    display:inline-block; padding:13px 28px; border-radius:24px;
+    background:var(--accent); color:#fff; font-size:15px; font-weight:600;
+    border:none; cursor:pointer; font-family:inherit;
+  }
+  .retry:active { opacity:0.85; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <svg class="owl" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="55" rx="34" ry="38" fill="var(--accent)"/>
+      <circle cx="38" cy="45" r="13" fill="#fff"/>
+      <circle cx="62" cy="45" r="13" fill="#fff"/>
+      <circle cx="38" cy="45" r="6" fill="#0E0E10"/>
+      <circle cx="62" cy="45" r="6" fill="#0E0E10"/>
+      <path d="M44 58 L50 64 L56 58 Z" fill="#F5A623"/>
+      <path d="M22 26 L38 38 L26 40 Z" fill="var(--accent)"/>
+      <path d="M78 26 L62 38 L74 40 Z" fill="var(--accent)"/>
+    </svg>
+    <h1>You're offline</h1>
+    <p>Sorry, Search can't load this page while you're offline. Check your connection and try again.</p>
+    <button class="retry" onclick="if(window.SearchApp&&window.SearchApp.retry)window.SearchApp.retry();">Try again</button>
+  </div>
+</body>
+</html>
