@@ -34,7 +34,10 @@ object AdBlocker {
         "bugsnag.com", "newrelic.com", "optimizely.com", "yandex.ru/ads"
     )
 
-    private val EMPTY = WebResourceResponse(
+    // A blocked request must get its own WebResourceResponse each time: a
+    // response's input stream is consumed once and read from WebView threads,
+    // so a single shared instance across concurrent blocked requests is unsafe.
+    private fun emptyResponse() = WebResourceResponse(
         "text/plain", "utf-8", ByteArrayInputStream(ByteArray(0))
     )
 
@@ -50,7 +53,7 @@ object AdBlocker {
     fun check(c: Context, request: WebResourceRequest?): WebResourceResponse? {
         if (!isEnabled(c)) return null
         val url = request?.url?.toString() ?: return null
-        return if (isBlocked(url)) EMPTY else null
+        return if (isBlocked(url)) emptyResponse() else null
     }
 
     /** JS that injects CSS to hide common ad slots/containers. */
