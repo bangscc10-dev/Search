@@ -677,6 +677,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun openDownloads() {
+        try {
+            val intent = android.content.Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS)
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(this,
+                "No downloads app available", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun openMenu() {
         // Reflect current Night Owl state in the menu label.
         (binding.menuNightOwl.getChildAt(1) as? android.widget.TextView)?.text =
@@ -993,6 +1004,14 @@ class MainActivity : AppCompatActivity() {
         binding.menuSettings.setOnClickListener {
             closeMenu()
             startActivity(android.content.Intent(this, SettingsActivity::class.java))
+        }
+        binding.menuDownloads.setOnClickListener {
+            closeMenu()
+            openDownloads()
+        }
+        binding.menuGames.setOnClickListener {
+            closeMenu()
+            android.widget.Toast.makeText(this, "Play games — coming soon", android.widget.Toast.LENGTH_SHORT).show()
         }
 
         binding.starBtn.setOnClickListener { toggleBookmark() }

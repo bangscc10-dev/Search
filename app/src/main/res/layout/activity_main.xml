@@ -277,6 +277,20 @@
                     android:text="Bookmarks" android:textSize="16sp"
                     android:textColor="?android:attr/textColorPrimary" />
             </LinearLayout>
+            <LinearLayout android:id="@+id/menuDownloads" style="@style/MenuRow">
+                <ImageView android:layout_width="22dp" android:layout_height="22dp"
+                    android:src="@drawable/menu_downloads" android:layout_marginEnd="18dp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Downloads" android:textSize="16sp"
+                    android:textColor="?android:attr/textColorPrimary" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/menuGames" style="@style/MenuRow">
+                <ImageView android:layout_width="22dp" android:layout_height="22dp"
+                    android:src="@drawable/menu_games" android:layout_marginEnd="18dp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Play games" android:textSize="16sp"
+                    android:textColor="?android:attr/textColorPrimary" />
+            </LinearLayout>
             <LinearLayout android:id="@+id/menuSettings" style="@style/MenuRow">
                 <ImageView android:layout_width="22dp" android:layout_height="22dp"
                     android:src="@drawable/menu_settings" android:layout_marginEnd="18dp" />
