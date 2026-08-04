@@ -37,16 +37,24 @@
      the same go() the native address bar uses everywhere else. */
   .field {
     width:100%; max-width:600px;
+    display:flex; align-items:center; gap:10px;
     background:var(--field); border:1px solid var(--line);
-    border-radius:30px; padding:20px 24px; box-shadow:var(--shadow);
+    border-radius:30px; padding:16px 18px 16px 24px; box-shadow:var(--shadow);
     transition:border-color .15s ease;
   }
   .field:focus-within { border-color:var(--accent); }
   .field input {
-    width:100%; border:none; outline:none; background:transparent;
+    flex:1; min-width:0; border:none; outline:none; background:transparent;
     color:var(--fg); font-size:17px; font-family:inherit;
   }
   .field input::placeholder { color:var(--muted); }
+  .field .ficon {
+    width:26px; height:26px; flex:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--accent);
+  }
+  .field .ficon svg { width:22px; height:22px; display:block; }
+  .field .fdiv { width:1px; height:22px; background:var(--line); flex:none; }
 
 
   /* Shortcut row: floating circular icons, Google-NTP style — no card shell. */
@@ -109,6 +117,13 @@
     <div class="wordmark">Search</div>
     <label class="field" id="field">
       <input id="q" type="text" inputmode="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Search the web" />
+      <span class="ficon" id="micBtn" role="button" aria-label="Voice search">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
+      </span>
+      <span class="fdiv"></span>
+      <span class="ficon" id="scanBtn" role="button" aria-label="Scan code">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M3 12h18"/></svg>
+      </span>
     </label>
     <div class="shortcuts" id="tiles"></div>
     <div class="feed hidden" id="feed"></div>
@@ -131,6 +146,17 @@
   }
   input.addEventListener('focus', function () { input.blur(); openNativeSearch(); });
   input.addEventListener('click', openNativeSearch);
+
+  var micBtn = document.getElementById('micBtn');
+  var scanBtn = document.getElementById('scanBtn');
+  if (micBtn) micBtn.addEventListener('click', function(e){
+    e.preventDefault(); e.stopPropagation();
+    if (window.SearchApp && window.SearchApp.startVoice) window.SearchApp.startVoice();
+  });
+  if (scanBtn) scanBtn.addEventListener('click', function(e){
+    e.preventDefault(); e.stopPropagation();
+    if (window.SearchApp && window.SearchApp.startScan) window.SearchApp.startScan();
+  });
 
   // ---------- Shortcut tiles ----------
   var host = document.getElementById('tiles');

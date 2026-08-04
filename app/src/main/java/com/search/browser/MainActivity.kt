@@ -40,6 +40,19 @@ class MainActivity : AppCompatActivity() {
     // Tracks the site-settings signature last applied, so we only reload when it changed.
     private var lastSiteSig: String = ""
 
+    // Voice search launcher (RecognizerIntent -> go()).
+    private val voiceLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+                ?.trim()
+            if (!spoken.isNullOrEmpty()) go(spoken)
+        }
+    }
+
     private fun siteSettingsSignature(): String {
         return listOf(
             Settings.getBool(this, Settings.SITE_JAVASCRIPT, true),
@@ -225,6 +238,10 @@ class MainActivity : AppCompatActivity() {
         fun open(url: String) { runOnUiThread { activeWeb()?.loadUrl(url) } }
         @JavascriptInterface
         fun focusSearch() { runOnUiThread { enterSearchMode() } }
+        @JavascriptInterface
+        fun startVoice() { runOnUiThread { launchVoiceSearch() } }
+        @JavascriptInterface
+        fun startScan() { runOnUiThread { launchScan() } }
 
         @JavascriptInterface
         fun retry() {
@@ -1096,6 +1113,34 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.starBtn.setOnClickListener { toggleBookmark() }
+    }
+
+    private fun launchScan() {
+        val scanner = com.google.mlkit.vision.codescanner.GmsBarcodeScanning.getClient(this)
+        scanner.startScan()
+            .addOnSuccessListener { barcode ->
+                val value = barcode.rawValue?.trim()
+                if (!value.isNullOrEmpty()) go(value)
+            }
+            .addOnCanceledListener { /* user closed the scanner */ }
+            .addOnFailureListener { e ->
+                android.widget.Toast.makeText(this,
+                    "Scanner unavailable", android.widget.Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun launchVoiceSearch() {
+        val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Speak to search")
+        }
+        try {
+            voiceLauncher.launch(intent)
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(this,
+                "Voice search not available", android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun go(input: String) {
