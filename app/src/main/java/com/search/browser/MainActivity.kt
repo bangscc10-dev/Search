@@ -185,6 +185,7 @@ class MainActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
                 val web = activeWeb()
                 when {
+                    findActive -> closeFindBar()
                     searchMode -> exitSearchMode()
                     binding.menuScrim.visibility == View.VISIBLE -> closeMenu()
                     binding.tabDeck.visibility == View.VISIBLE -> closeDeck()
@@ -199,6 +200,7 @@ class MainActivity : AppCompatActivity() {
         setupUrlBar()
         setupToolbar()
         setupDeck()
+        setupFindBar()
 
         // Only create the initial home tab on a genuine fresh start.
         // Prevents losing your open tab if the activity is recreated (e.g. returning from Settings).
@@ -533,6 +535,12 @@ class MainActivity : AppCompatActivity() {
             startDownload(url, userAgent, contentDisposition, mimeType)
         }
 
+        web.setFindListener { activeIndex, numberOfMatches, isDoneCounting ->
+            if (isDoneCounting) {
+                binding.findCount.text = if (numberOfMatches > 0)
+                    "${activeIndex + 1}/$numberOfMatches" else "0/0"
+            }
+        }
         return web
     }
 
@@ -746,6 +754,47 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ---------- Tab deck ----------
+
+    // ---------- Find in page ----------
+    private var findActive = false
+
+    private fun openFindBar() {
+        val web = activeWeb() ?: return
+        findActive = true
+        binding.findBar.visibility = View.VISIBLE
+        binding.findInput.text?.clear()
+        binding.findCount.text = ""
+        binding.findInput.requestFocus()
+        val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE)
+            as android.view.inputmethod.InputMethodManager
+        imm.showSoftInput(binding.findInput, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+    }
+
+    private fun closeFindBar() {
+        findActive = false
+        binding.findBar.visibility = View.GONE
+        activeWeb()?.clearMatches()
+        hideKeyboard()
+    }
+
+    private fun setupFindBar() {
+        binding.findInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+            override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val q = s?.toString() ?: ""
+                val web = activeWeb() ?: return
+                if (q.isEmpty()) { web.clearMatches(); binding.findCount.text = ""; return }
+                web.findAllAsync(q)
+            }
+        })
+        binding.findInput.setOnEditorActionListener { _, _, _ ->
+            activeWeb()?.findNext(true); true
+        }
+        binding.findNext.setOnClickListener { activeWeb()?.findNext(true) }
+        binding.findPrev.setOnClickListener { activeWeb()?.findNext(false) }
+        binding.findClose.setOnClickListener { closeFindBar() }
+    }
 
     private fun setupDeck() {
         tabAdapter = TabAdapter(
@@ -1049,6 +1098,10 @@ class MainActivity : AppCompatActivity() {
         binding.menuDownloads.setOnClickListener {
             closeMenu()
             openDownloads()
+        }
+        binding.menuFind.setOnClickListener {
+            closeMenu()
+            openFindBar()
         }
         binding.menuGames.setOnClickListener {
             closeMenu()
