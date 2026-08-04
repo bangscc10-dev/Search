@@ -83,7 +83,7 @@ object Settings {
     fun setHomeBackground(c: Context, v: String) { prefs(c).edit().putString(HOME_BACKGROUND, v).apply() }
 
     fun getHomeAccent(c: Context): String =
-        prefs(c).getString(HOME_ACCENT, "#2B6CF0") ?: "#2B6CF0"
+        prefs(c).getString(HOME_ACCENT, "#8B6BD8") ?: "#8B6BD8"
     fun setHomeAccent(c: Context, v: String) { prefs(c).edit().putString(HOME_ACCENT, v).apply() }
 
     // Accessibility
