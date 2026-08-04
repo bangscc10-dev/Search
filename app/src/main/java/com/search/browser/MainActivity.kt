@@ -1,4 +1,5 @@
 package com.search.browser
+import androidx.activity.enableEdgeToEdge
 
 
 
@@ -155,6 +156,7 @@ class MainActivity : AppCompatActivity() {
         // Launched with the splash theme so the system splash shows the owl;
         // switch to the real app theme before inflating the browser UI.
         setTheme(R.style.Theme_Search)
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         // Apply the saved theme preference before inflating.
         when (Settings.getTheme(this)) {
@@ -167,6 +169,14 @@ class MainActivity : AppCompatActivity() {
         }
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        // Edge-to-edge (mandatory on Android 16 / SDK 36): pad the root by the
+        // system-bar insets so the top bar sits below the status bar and content
+        // stays above the navigation bar.
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val bars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
         setupSuggestOverlay()
         lastSiteSig = siteSettingsSignature()
 
@@ -683,14 +693,14 @@ class MainActivity : AppCompatActivity() {
             // Subtle purple wash matched to the theme.
             val tint = if (isDark) "#231A3A" else "#ECE7F5"
             topBar?.setBackgroundColor(android.graphics.Color.parseColor(tint))
-            window.statusBarColor = android.graphics.Color.parseColor(tint)
+            binding.rootView.setBackgroundColor(android.graphics.Color.parseColor(tint))
             // Icons: light icons on dark tint, dark icons on light tint.
             controller.isAppearanceLightStatusBars = !isDark
         } else {
             topBar?.setBackgroundColor(android.graphics.Color.TRANSPARENT)
             val tv = android.util.TypedValue()
             theme.resolveAttribute(android.R.attr.colorBackground, tv, true)
-            window.statusBarColor = tv.data
+            binding.rootView.setBackgroundColor(tv.data)
             controller.isAppearanceLightStatusBars = !isDark
         }
     }
