@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Search.Splash" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@color/splashBg</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/splashIconBg</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_owl</item>
+        <item name="android:statusBarColor">@color/splashBg</item>
+        <item name="android:navigationBarColor">@color/splashBg</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>

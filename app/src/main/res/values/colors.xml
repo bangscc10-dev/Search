@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="appBackground">#FAFAFA</color>
-    <color name="splashBg">#2A1E48</color>
+    <color name="splashBg">#220549</color>
+    <color name="splashIconBg">#220549</color>
     <color name="ic_launcher_background">#2A1E48</color>
 </resources>

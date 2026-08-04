@@ -152,6 +152,9 @@ class MainActivity : AppCompatActivity() {
     private var deckVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Launched with the splash theme so the system splash shows the owl;
+        // switch to the real app theme before inflating the browser UI.
+        setTheme(R.style.Theme_Search)
         super.onCreate(savedInstanceState)
         // Apply the saved theme preference before inflating.
         when (Settings.getTheme(this)) {
