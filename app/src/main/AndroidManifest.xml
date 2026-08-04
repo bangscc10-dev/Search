@@ -35,6 +35,10 @@
             android:name=".SectionActivity"
             android:exported="false"
             android:theme="@style/Theme.Search" />
+        <activity
+            android:name=".LegalActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Search" />
 
     </application>
 </manifest>

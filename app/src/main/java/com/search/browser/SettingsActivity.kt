@@ -121,9 +121,8 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun openPage(url: String) {
-        val i = android.content.Intent(this, MainActivity::class.java)
-        i.putExtra("open_url", url)
-        i.flags = android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+        val i = android.content.Intent(this, LegalActivity::class.java)
+        i.putExtra("url", url)
         startActivity(i)
     }
 }
