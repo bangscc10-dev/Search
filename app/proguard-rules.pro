@@ -24,3 +24,11 @@
 -dontwarn android.webkit.**
 -keepattributes JavascriptInterface
 -keepattributes *Annotation*
+
+# ---- GMS Google Code Scanner / ML Kit ----
+# The code scanner loads classes dynamically; keep ML Kit + GMS vision
+# classes so R8 doesn't strip what the scanner needs at runtime.
+-keep class com.google.mlkit.** { *; }
+-keep class com.google.android.gms.internal.mlkit_** { *; }
+-dontwarn com.google.mlkit.**
+-dontwarn com.google.android.gms.**
