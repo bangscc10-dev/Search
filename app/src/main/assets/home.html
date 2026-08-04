@@ -74,6 +74,34 @@
     font-size:12px; color:var(--muted); max-width:100%;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
+
+  /* News feed */
+  .feed { width:100%; max-width:600px; margin-top:34px; }
+  .feed.hidden { display:none; }
+  .feed-head {
+    font-size:13px; font-weight:600; color:var(--muted);
+    text-transform:uppercase; letter-spacing:0.04em;
+    margin:0 4px 12px;
+  }
+  .feed-card {
+    display:flex; gap:12px; align-items:stretch;
+    background:var(--field); border:1px solid var(--line);
+    border-radius:16px; overflow:hidden; margin-bottom:10px;
+    text-decoration:none; color:var(--fg); box-shadow:var(--shadow);
+  }
+  .feed-card:active { background:rgba(128,128,128,0.10); }
+  .feed-card .thumb {
+    width:96px; min-width:96px; background:var(--line);
+    background-size:cover; background-position:center;
+  }
+  .feed-card .body { padding:12px 14px 12px 0; flex:1; min-width:0; }
+  .feed-card .title {
+    font-size:14px; font-weight:600; line-height:1.35;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .feed-card .src { font-size:11px; color:var(--muted); margin-top:6px; text-transform:capitalize; }
+  .feed-card.no-thumb .body { padding-left:14px; }
 </style>
 </head>
 <body>
@@ -83,6 +111,7 @@
       <input id="q" type="text" inputmode="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Search the web" />
     </label>
     <div class="shortcuts" id="tiles"></div>
+    <div class="feed hidden" id="feed"></div>
   </div>
 <script>
   var showTiles = true;
@@ -161,6 +190,54 @@
   });
   window.addEventListener('pageshow', renderTiles);
   window.addEventListener('focus', renderTiles);
+
+  // ---------- News feed ----------
+  var feedHost = document.getElementById('feed');
+  var feedReqId = 0;
+  var feedLoaded = false;
+
+  function renderFeed(items){
+    feedHost.innerHTML='';
+    if (!items || !items.length){ feedHost.classList.add('hidden'); return; }
+    var head=document.createElement('div'); head.className='feed-head';
+    head.textContent='Top stories';
+    feedHost.appendChild(head);
+    items.slice(0,12).forEach(function(it){
+      var a=document.createElement('a'); a.className='feed-card'; a.href='javascript:void(0)';
+      a.onclick=function(){ if(window.SearchApp&&window.SearchApp.open) window.SearchApp.open(it.link); };
+      if (it.image){
+        var t=document.createElement('div'); t.className='thumb';
+        t.style.backgroundImage="url('"+it.image.replace(/'/g,"%27")+"')";
+        a.appendChild(t);
+      } else {
+        a.classList.add('no-thumb');
+      }
+      var b=document.createElement('div'); b.className='body';
+      var ti=document.createElement('div'); ti.className='title'; ti.textContent=it.title;
+      b.appendChild(ti);
+      if (it.source){ var sc=document.createElement('div'); sc.className='src'; sc.textContent=it.source; b.appendChild(sc); }
+      a.appendChild(b);
+      feedHost.appendChild(a);
+    });
+    feedHost.classList.remove('hidden');
+  }
+
+  window.__onFeed = function(reqId, items){
+    if (reqId !== feedReqId) return;
+    feedLoaded = true;
+    renderFeed(items);
+  };
+
+  function loadFeed(){
+    if (!window.SearchApp || !window.SearchApp.getFeed) return;
+    feedReqId++;
+    try { window.SearchApp.getFeed(feedReqId); } catch(e){}
+  }
+
+  loadFeed();
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible' && !feedLoaded) loadFeed();
+  });
 </script>
 </body>
 </html>

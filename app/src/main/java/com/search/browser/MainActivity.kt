@@ -296,6 +296,19 @@ class MainActivity : AppCompatActivity() {
                 runOnUiThread { pushSuggestions(requestId, items) }
             }.start()
         }
+        @JavascriptInterface
+        fun getFeed(requestId: Int) {
+            Thread {
+                val json = NewsFeed.fetch()
+                runOnUiThread { pushFeed(requestId, json) }
+            }.start()
+        }
+    }
+    private fun pushFeed(requestId: Int, json: String) {
+        val web = activeWeb() ?: return
+        val js = "window.__onFeed && window.__onFeed(" + requestId + ", JSON.parse(" +
+            org.json.JSONObject.quote(json) + "));"
+        web.evaluateJavascript(js, null)
     }
 
     private fun localSuggestionMatches(query: String, limit: Int): List<Triple<String, String, String>> {
