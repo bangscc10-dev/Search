@@ -54,6 +54,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Requests POST_NOTIFICATIONS (Android 13+) so the media notification can show.
+    private val notifPermLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { /* granted or not; media notification simply won't show if denied */ }
+    private var askedNotifPerm = false
+    private fun ensureNotifPermission() {
+        if (android.os.Build.VERSION.SDK_INT < 33) return
+        if (askedNotifPerm) return
+        val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+            this, android.Manifest.permission.POST_NOTIFICATIONS
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (!granted) {
+            askedNotifPerm = true
+            notifPermLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
     private fun siteSettingsSignature(): String {
         return listOf(
             Settings.getBool(this, Settings.SITE_JAVASCRIPT, true),
@@ -230,6 +246,13 @@ class MainActivity : AppCompatActivity() {
         setupToolbar()
         setupDeck()
         setupFindBar()
+        // Notification media buttons -> drive the page's media element.
+        MediaService.onControl = { action ->
+            runOnUiThread {
+                activeWeb()?.evaluateJavascript(
+                    "window.__searchMediaControl && window.__searchMediaControl('" + action + "');", null)
+            }
+        }
 
         // Only create the initial home tab on a genuine fresh start.
         // Prevents losing your open tab if the activity is recreated (e.g. returning from Settings).
@@ -258,6 +281,10 @@ class MainActivity : AppCompatActivity() {
         fun startVoice() { runOnUiThread { launchVoiceSearch() } }
         @JavascriptInterface
         fun startScan() { runOnUiThread { launchScan() } }
+        @JavascriptInterface
+        fun mediaState(state: String, title: String, host: String) {
+            runOnUiThread { onMediaState(state, title, host) }
+        }
 
         @JavascriptInterface
         fun retry() {
@@ -498,6 +525,9 @@ class MainActivity : AppCompatActivity() {
             }
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
+                // Media detection: report HTML5 playback to the app for the
+                // media-control notification (skipped in Night Owl).
+                if (!nightOwl) view?.evaluateJavascript(MediaDetect.js(), null)
                 // Cosmetic ad-hiding: hide common ad containers when blocking is on.
                 if (AdBlocker.isEnabled(this@MainActivity)) {
                     view?.evaluateJavascript(AdBlocker.hideCss(), null)
@@ -1134,6 +1164,38 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.starBtn.setOnClickListener { toggleBookmark() }
+    }
+
+    // ---------- Media control notification ----------
+    private var mediaActive = false
+
+    private fun onMediaState(state: String, title: String, host: String) {
+        when (state) {
+            "playing", "paused" -> {
+                ensureNotifPermission()
+                val intent = android.content.Intent(this, MediaService::class.java).apply {
+                    action = MediaService.ACTION_UPDATE
+                    putExtra(MediaService.EXTRA_TITLE, if (title.isBlank()) "Media" else title)
+                    putExtra(MediaService.EXTRA_HOST, host)
+                    putExtra(MediaService.EXTRA_PLAYING, state == "playing")
+                }
+                try {
+                    androidx.core.content.ContextCompat.startForegroundService(this, intent)
+                    mediaActive = true
+                } catch (e: Exception) { /* ignore */ }
+            }
+            "none" -> stopMediaService()
+        }
+    }
+
+    private fun stopMediaService() {
+        if (!mediaActive) return
+        mediaActive = false
+        try {
+            startService(android.content.Intent(this, MediaService::class.java).apply {
+                action = MediaService.ACTION_STOP
+            })
+        } catch (e: Exception) { /* ignore */ }
     }
 
     private fun launchScan() {

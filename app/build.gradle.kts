@@ -72,4 +72,5 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.9.3")
     implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("androidx.media:media:1.7.0")
 }
