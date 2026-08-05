@@ -32,3 +32,11 @@
 -keep class com.google.android.gms.internal.mlkit_** { *; }
 -dontwarn com.google.mlkit.**
 -dontwarn com.google.android.gms.**
+
+# ---- Media session / notification ----
+# MediaButtonReceiver is referenced from the manifest; keep it and the
+# media support classes so R8 doesn't strip/rename what the session needs.
+-keep class androidx.media.** { *; }
+-keep class android.support.v4.media.** { *; }
+-keep class com.search.browser.MediaService { *; }
+-dontwarn androidx.media.**
