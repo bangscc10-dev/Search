@@ -1,5 +1,6 @@
 package com.search.browser
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 
 
@@ -164,11 +165,20 @@ class MainActivity : AppCompatActivity() {
 
     private val thumbWidthPx = 400
     private var deckVisible = false
+    // Held true to keep the system splash on its final frame briefly so the
+    // launch animation lands cleanly before the browser appears.
+    private var keepSplash = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Launched with the splash theme so the system splash shows the owl;
         // switch to the real app theme before inflating the browser UI.
         setTheme(R.style.Theme_Search)
+        val splash = installSplashScreen()
+        splash.setKeepOnScreenCondition { keepSplash }
+        // Release the splash ~1.2s after the animation so it settles, then enters.
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            keepSplash = false
+        }, 1200L)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         // Apply the saved theme preference before inflating.
