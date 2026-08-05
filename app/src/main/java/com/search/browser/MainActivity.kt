@@ -157,6 +157,12 @@ class MainActivity : AppCompatActivity() {
         // because reloading wipes the tab's back/forward history. Changes take
         // full effect on the next navigation.
     }
+    override fun onPause() {
+        super.onPause()
+        // Persist cookies to disk so logins survive the app being killed
+        // (common on low-RAM devices). Without this, sessions can be lost.
+        android.webkit.CookieManager.getInstance().flush()
+    }
 
     private lateinit var binding: ActivityMainBinding
     private val homePage = "file:///android_asset/home.html"
@@ -443,6 +449,11 @@ class MainActivity : AppCompatActivity() {
                 safeBrowsingEnabled = Settings.getBool(
                     this@MainActivity, Settings.SEC_SAFE_BROWSING, true)
             }
+        }
+        // Let the system password manager (Google) offer saved logins in web
+        // forms, so sign-ins autofill like Chrome.
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            web.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_YES
         }
 
         // Third-party cookie policy.
