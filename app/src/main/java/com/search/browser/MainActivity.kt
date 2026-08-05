@@ -153,6 +153,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // If a flexible update finished downloading while away, offer to install it.
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
+            if (info.installStatus() ==
+                com.google.android.play.core.install.model.InstallStatus.DOWNLOADED) {
+                android.widget.Toast.makeText(this,
+                    "Update ready — finishing install", android.widget.Toast.LENGTH_SHORT).show()
+                appUpdateManager.completeUpdate()
+            }
+        }
         val sig = siteSettingsSignature()
         if (sig == lastSiteSig) return  // nothing changed -> don't touch anything
         lastSiteSig = sig
@@ -190,6 +199,12 @@ class MainActivity : AppCompatActivity() {
     // Held true to keep the system splash on its final frame briefly so the
     // launch animation lands cleanly before the browser appears.
     private var keepSplash = true
+    private val appUpdateManager by lazy {
+        com.google.android.play.core.appupdate.AppUpdateManagerFactory.create(this)
+    }
+    private val updateLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult()
+    ) { /* user accepted/dismissed the Play update UI */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Launched with the splash theme so the system splash shows the owl;
@@ -253,6 +268,8 @@ class MainActivity : AppCompatActivity() {
                     "window.__searchMediaControl && window.__searchMediaControl('" + action + "');", null)
             }
         }
+        // Quietly check Play for a newer version on launch; prompts only if one exists.
+        checkForUpdate(fromUser = false)
 
         // Only create the initial home tab on a genuine fresh start.
         // Prevents losing your open tab if the activity is recreated (e.g. returning from Settings).
@@ -1165,6 +1182,38 @@ class MainActivity : AppCompatActivity() {
 
         binding.starBtn.setOnClickListener { toggleBookmark() }
     }
+
+    // ---------- In-app updates (Google Play) ----------
+    private fun checkForUpdate(fromUser: Boolean) {
+        appUpdateManager.appUpdateInfo
+            .addOnSuccessListener { info ->
+                val available = info.updateAvailability() ==
+                    com.google.android.play.core.install.model.UpdateAvailability.UPDATE_AVAILABLE
+                val allowsFlexible = info.isUpdateTypeAllowed(
+                    com.google.android.play.core.install.model.AppUpdateType.FLEXIBLE)
+                if (available && allowsFlexible) {
+                    try {
+                        appUpdateManager.startUpdateFlowForResult(
+                            info,
+                            updateLauncher,
+                            com.google.android.play.core.appupdate.AppUpdateOptions.newBuilder(
+                                com.google.android.play.core.install.model.AppUpdateType.FLEXIBLE
+                            ).build()
+                        )
+                    } catch (e: Exception) { /* ignore */ }
+                } else if (fromUser) {
+                    android.widget.Toast.makeText(this,
+                        "You're on the latest version", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener {
+                if (fromUser) android.widget.Toast.makeText(this,
+                    "Couldn't check for updates", android.widget.Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    // Public entry point for the Settings "Check for updates" row.
+    fun checkForUpdateFromSettings() = checkForUpdate(fromUser = true)
 
     // ---------- Media control notification ----------
     private var mediaActive = false

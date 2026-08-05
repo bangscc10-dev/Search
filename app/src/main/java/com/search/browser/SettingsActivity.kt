@@ -95,7 +95,42 @@ class SettingsActivity : AppCompatActivity() {
             packageManager.getPackageInfo(packageName, 0).versionName
         } catch (e: Exception) { "1.0" }
         about.text = "Search Browser\nVersion $version"
+        findViewById<TextView>(R.id.rowCheckUpdate).setOnClickListener { checkForUpdate() }
     }
+
+    private val updateLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult()
+    ) { /* user accepted or dismissed the Play update UI */ }
+
+    private fun checkForUpdate() {
+        val mgr = com.google.android.play.core.appupdate.AppUpdateManagerFactory.create(this)
+        mgr.appUpdateInfo
+            .addOnSuccessListener { info ->
+                val available = info.updateAvailability() ==
+                    com.google.android.play.core.install.model.UpdateAvailability.UPDATE_AVAILABLE
+                val allowed = info.isUpdateTypeAllowed(
+                    com.google.android.play.core.install.model.AppUpdateType.FLEXIBLE)
+                if (available && allowed) {
+                    try {
+                        mgr.startUpdateFlowForResult(
+                            info,
+                            updateLauncher,
+                            com.google.android.play.core.appupdate.AppUpdateOptions.newBuilder(
+                                com.google.android.play.core.install.model.AppUpdateType.FLEXIBLE
+                            ).build()
+                        )
+                    } catch (e: Exception) {
+                        toast("Couldn't start update")
+                    }
+                } else {
+                    toast("You're on the latest version")
+                }
+            }
+            .addOnFailureListener { toast("Couldn't check for updates") }
+    }
+
+    private fun toast(msg: String) =
+        android.widget.Toast.makeText(this, msg, android.widget.Toast.LENGTH_SHORT).show()
 
     private fun openSection(section: String) {
         val i = android.content.Intent(this, SectionActivity::class.java)

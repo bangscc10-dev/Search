@@ -91,6 +91,8 @@
                 android:text="Search Browser"
                 android:textSize="15sp"
                 android:textColor="?android:attr/textColorPrimary" />
+            <TextView android:id="@+id/rowCheckUpdate" style="@style/SettingsRow"
+                android:text="Check for updates" />
 
             <View style="@style/SettingsDivider" />
             <TextView android:id="@+id/rowPrivacy" style="@style/SettingsRow" android:text="Privacy Policy" />
