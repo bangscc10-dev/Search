@@ -215,7 +215,7 @@ class MainActivity : AppCompatActivity() {
         // Release the splash ~1.2s after the animation so it settles, then enters.
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             keepSplash = false
-        }, 1200L)
+        }, 1300L)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         // Apply the saved theme preference before inflating.

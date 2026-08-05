@@ -40,3 +40,7 @@
 -keep class android.support.v4.media.** { *; }
 -keep class com.search.browser.MediaService { *; }
 -dontwarn androidx.media.**
+
+# ---- Play In-App Updates ----
+-keep class com.google.android.play.core.** { *; }
+-dontwarn com.google.android.play.core.**
