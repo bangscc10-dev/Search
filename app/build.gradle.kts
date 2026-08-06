@@ -75,4 +75,5 @@ dependencies {
     implementation("androidx.media:media:1.7.0")
     implementation("com.google.android.play:app-update:2.1.0")
     implementation("com.google.android.play:app-update-ktx:2.1.0")
+    implementation("com.android.billingclient:billing-ktx:8.0.0")
 }
