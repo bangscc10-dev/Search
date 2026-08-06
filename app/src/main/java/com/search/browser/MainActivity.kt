@@ -1175,6 +1175,11 @@ class MainActivity : AppCompatActivity() {
             closeMenu()
             openFindBar()
         }
+        binding.menuSupport.setOnClickListener {
+            closeMenu()
+            startActivity(android.content.Intent(this, LegalActivity::class.java)
+                .putExtra("url", "file:///android_asset/supporter.html"))
+        }
         binding.menuGames.setOnClickListener {
             closeMenu()
             android.widget.Toast.makeText(this, "Play games — coming soon", android.widget.Toast.LENGTH_SHORT).show()

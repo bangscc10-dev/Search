@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Support Search</title>
+<style>
+  :root{
+    --bg:#1c0742; --bg2:#2a0a5c; --card:#2f1466; --line:#4a2a8f;
+    --owl:#8B6BD8; --accent:#fca310; --fg:#F4EEFF; --muted:#B9A6E6;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;min-height:100%;background:
+    radial-gradient(120% 90% at 30% 0%, var(--bg2), var(--bg) 60%);
+    color:var(--fg);font-family:-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:560px;margin:0 auto;padding:40px 22px 56px;}
+  .owlbig{width:120px;height:120px;display:block;margin:8px auto 18px;
+    filter:drop-shadow(0 12px 30px rgba(0,0,0,.45));transition:transform .3s ease;}
+  h1{font-size:26px;font-weight:800;text-align:center;letter-spacing:-.01em;margin:0 0 10px;}
+  .sub{text-align:center;color:var(--muted);font-size:15px;line-height:1.5;margin:0 auto 30px;max-width:430px;}
+  .tiers{display:flex;flex-direction:column;gap:14px;}
+  .tier{display:flex;align-items:center;gap:16px;background:var(--card);
+    border:1px solid var(--line);border-radius:20px;padding:18px;cursor:pointer;
+    transition:transform .12s ease, border-color .12s ease;}
+  .tier:active{transform:scale(.985);}
+  .tier .emoji{font-size:34px;line-height:1;flex:none;width:46px;text-align:center;}
+  .tier .mid{flex:1;min-width:0;}
+  .tier .name{font-size:17px;font-weight:700;margin:0 0 3px;}
+  .tier .note{font-size:13px;color:var(--muted);line-height:1.4;}
+  .tier .price{font-weight:800;font-size:16px;color:var(--accent);flex:none;
+    background:rgba(252,163,16,.12);padding:8px 14px;border-radius:12px;white-space:nowrap;}
+  .foot{text-align:center;color:var(--muted);font-size:13px;line-height:1.6;margin-top:28px;}
+  .foot b{color:var(--fg);font-weight:600;}
+  .thanks{display:none;text-align:center;padding:20px 0;}
+  .thanks h1{font-size:24px;}
+  .thanks p{color:var(--muted);font-size:15px;line-height:1.6;max-width:390px;margin:0 auto;}
+  .heartline{font-size:20px;margin-top:14px;letter-spacing:6px;}
+  body.issupporter .tiers,body.issupporter .maincopy{display:none;}
+  body.issupporter .thanks{display:block;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <svg class="owlbig" id="owl" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="256" cy="272" rx="130" ry="126" fill="#7a4fd0"/>
+      <ellipse cx="256" cy="312" rx="92" ry="94" fill="#8358d4"/>
+      <path d="M196 118 L214 176 L164 172 Z" fill="#6a41c8"/>
+      <path d="M316 118 L298 176 L348 172 Z" fill="#6a41c8"/>
+      <circle cx="206" cy="242" r="52" fill="#fff"/>
+      <circle cx="302" cy="242" r="52" fill="#fff"/>
+      <circle cx="210" cy="248" r="33" fill="#fca310"/>
+      <circle cx="298" cy="248" r="33" fill="#fca310"/>
+      <circle cx="212" cy="244" r="16" fill="#211829"/>
+      <circle cx="296" cy="244" r="16" fill="#211829"/>
+      <path d="M256 286 L275 306 L256 330 L237 306 Z" fill="#f6a616"/>
+    </svg>
+
+    <div class="maincopy">
+      <h1>Buy me a coffee</h1>
+      <p class="sub">Search is built by one person, and it's free forever — no ads, nothing tracked,
+        nothing sold. If it's earned a spot in your pocket, a coffee keeps me (and the owl) going.</p>
+    </div>
+
+    <div class="tiers" id="tiers">
+      <div class="tier" data-id="supporter_coffee">
+        <div class="emoji">☕</div>
+        <div class="mid">
+          <div class="name">Coffee</div>
+          <div class="note">A little thank-you. Fuels the late-night coding.</div>
+        </div>
+        <div class="price" id="price_supporter_coffee">…</div>
+      </div>
+      <div class="tier" data-id="supporter_snack">
+        <div class="emoji">🍪</div>
+        <div class="mid">
+          <div class="name">Snack</div>
+          <div class="note">Now we're talking. Genuinely appreciated.</div>
+        </div>
+        <div class="price" id="price_supporter_snack">…</div>
+      </div>
+      <div class="tier" data-id="supporter_meal">
+        <div class="emoji">🍲</div>
+        <div class="mid">
+          <div class="name">A whole meal</div>
+          <div class="note">Absurdly generous. I might cry a little.</div>
+        </div>
+        <div class="price" id="price_supporter_meal">…</div>
+      </div>
+    </div>
+
+    <div class="foot maincopy">
+      One-time, no subscription. <b>Browsing stays exactly the same</b> whether you tip or not —
+      this just makes the owl smile.
+    </div>
+
+    <div class="thanks" id="thanks">
+      <h1>You're a legend 💜</h1>
+      <p>The owl is well fed and eternally grateful. Thank you for keeping Search
+        independent and ad-free — it genuinely means a lot.</p>
+      <div class="heartline">🦉 ☕ 💜</div>
+    </div>
+  </div>
+
+<script>
+  var owl = document.getElementById('owl');
+  document.querySelectorAll('.tier').forEach(function(t){
+    t.addEventListener('click', function(){
+      var id = t.getAttribute('data-id');
+      if (window.SearchApp && window.SearchApp.buySupport) window.SearchApp.buySupport(id);
+    });
+  });
+  window.__setPrice = function(id, formatted){
+    var el = document.getElementById('price_'+id);
+    if (el) el.textContent = formatted;
+  };
+  window.__setSupporter = function(is){
+    document.body.classList.toggle('issupporter', !!is);
+  };
+  if (window.SearchApp && window.SearchApp.supportInit){
+    try { window.SearchApp.supportInit(); } catch(e){}
+  }
+</script>
+</body>
+</html>
