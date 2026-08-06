@@ -215,7 +215,7 @@ class MainActivity : AppCompatActivity() {
         // Release the splash ~1.2s after the animation so it settles, then enters.
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             keepSplash = false
-        }, 1300L)
+        }, 1500L)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         // Apply the saved theme preference before inflating.
@@ -1177,8 +1177,7 @@ class MainActivity : AppCompatActivity() {
         }
         binding.menuSupport.setOnClickListener {
             closeMenu()
-            startActivity(android.content.Intent(this, LegalActivity::class.java)
-                .putExtra("url", "file:///android_asset/supporter.html"))
+            startActivity(android.content.Intent(this, SupportActivity::class.java))
         }
         binding.menuGames.setOnClickListener {
             closeMenu()

@@ -44,3 +44,9 @@
 # ---- Play In-App Updates ----
 -keep class com.google.android.play.core.** { *; }
 -dontwarn com.google.android.play.core.**
+
+# ---- Play Billing ----
+-keep class com.android.billingclient.** { *; }
+-keep class com.search.browser.BillingManager { *; }
+-keep class com.search.browser.SupportActivity { *; }
+-dontwarn com.android.billingclient.**

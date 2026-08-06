@@ -45,6 +45,10 @@
             android:name=".LegalActivity"
             android:exported="false"
             android:theme="@style/Theme.Search" />
+        <activity
+            android:name=".SupportActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Search" />
         <service
             android:name=".MediaService"
             android:exported="false"
